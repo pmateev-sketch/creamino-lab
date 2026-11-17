@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creamino Software Demo · Point Surface</title>
+<meta name="description" content="Creamino – Smart Sports Surface Intelligence Platform. Interactive software demo by Point Surface, running on synthetic demonstration data.">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231E2A38%22/%3E%3Ctext x=%2250%22 y=%2272%22 font-size=%2266%22 text-anchor=%22middle%22 fill=%22%2369D0E6%22 font-family=%22Arial%22%3E%CE%A9%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="omega">Ω</span><div>CREAMINO<small>Every Athlete · Every Surface</small></div></div>
+    <span class="tag syn" id="statusTag">SYNTHETIC DEMO</span>
+    <div class="spacer"></div>
+    <label>Dataset<select id="dsSelect" aria-label="Active dataset"></select></label>
+    <label>Session<select id="sessSelect" aria-label="Active session"></select></label>
+    <button class="btn ghost small" id="walkBtn">Walkthrough</button>
+    <button class="btn ghost small" id="resetBtn">Reset demo</button>
+  </header>
+  <div class="banner" id="banner">SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED</div>
+  <nav class="side" id="nav" aria-label="Modules"></nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div id="walk" class="walk hidden" role="dialog" aria-live="polite"></div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true"></div>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/synthetic.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/report.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
