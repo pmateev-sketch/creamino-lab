@@ -168,8 +168,8 @@
     $('#sessSelect').value = state.session;
     var tag = $('#statusTag'); tag.textContent = d.status; tag.className = 'tag ' + statusClass(d.status);
     var b = $('#banner');
-    if (d.status === STATUS[0]) { b.className = 'banner'; b.textContent = 'SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED'; }
-    else if (d.status === STATUS[1]) { b.className = 'banner exp'; b.textContent = 'EXPERIMENTAL REFERENCE DATA — USER-PROVIDED, NOT INDEPENDENTLY VALIDATED'; }
+    if (d.status === STATUS[0]) { b.className = 'banner'; b.innerHTML = 'SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED<br>NOT LIVE STADIUM DATA'; }
+    else if (d.status === STATUS[1]) { b.className = 'banner exp'; b.innerHTML = 'EXPERIMENTAL REFERENCE DATA — USER-PROVIDED, NOT INDEPENDENTLY VALIDATED<br>NOT LIVE STADIUM DATA'; }
     else { b.className = 'banner val'; b.textContent = 'INDEPENDENTLY VALIDATED RESULTS — see provenance log for the validation record'; }
   }
   function go(view) { state.view = view; render(); window.scrollTo(0, 0); var m = $('#main'); if (m) m.focus({ preventScroll: true }); }
