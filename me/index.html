@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0c2730">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Creamino">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Creamino Me – приложение за спортиста</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{
+  /* Creamino Me: тъмен петролен свят + тюркоаз; телефон в центъра, обяснение вдясно */
+  --bg:#071c23; --phone:#0c2730; --card:#123844; --card2:#174654; --line:rgba(63,211,216,.2);
+  --text:#e9f4f5; --muted:#9fbcc1; --accent:#3fd3d8; --gold:#d4a72c;
+  --ok:#3ccf8e; --warn:#f2b84b; --crit:#ef5b5b;
+  --display:'Inter',system-ui,sans-serif; --body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 600px at 70% -10%,#0f3a45 0%,var(--bg) 60%);color:var(--text);font:14px/1.45 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.demo{background:var(--warn);color:#2a1d00;text-align:center;font-size:12px;font-weight:600;padding:5px 12px}
+.stage{position:relative;min-height:calc(100vh - 28px);background:#071c23 url(stage-bg.jpg) left bottom/auto 100% no-repeat;display:grid;grid-template-columns:max(26%,calc(.5 * (100vh - 28px))) 1fr;grid-template-rows:auto 1fr;padding:22px 28px 30px}
+.intro{grid-column:2;display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
+.intro h1{font-size:40px;line-height:1.08;text-shadow:0 3px 18px rgba(0,0,0,.6)}
+.devices{grid-column:2;display:flex;gap:28px;align-items:flex-start;--z:.86}
+.devices .phone{zoom:var(--z);flex:none}
+.devices .tablet{margin-top:60px}
+.below{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:22px 28px 40px;max-width:1500px;margin:0 auto}
+.dev-pulse{animation:pulse 1.2s ease 2}
+@keyframes pulse{50%{box-shadow:0 0 0 6px var(--accent),0 30px 80px rgba(0,0,0,.55)}}
+@media (max-width:1750px){.devices{--z:.74}}
+@media (max-width:1450px){.devices{--z:.68}.intro h1{font-size:32px}}
+@media (max-width:1150px){.devices .tablet{display:none}.devices{--z:.8}.below{grid-template-columns:1fr}}
+.side{max-width:420px;display:flex;flex-direction:column;gap:14px;padding-top:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.omega{font-family:var(--display);font-weight:800;font-size:34px;color:var(--accent);line-height:1}
+.brand b{font-family:var(--display);font-size:20px}
+.brand small{display:block;color:var(--muted);font-size:12px}
+.side h1{font-size:30px;line-height:1.12}
+.side p{margin:0;color:var(--muted)}
+.who{display:flex;flex-wrap:wrap;gap:8px}
+.who{display:flex;flex-wrap:wrap;gap:8px}.who button{backdrop-filter:blur(4px);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px;font-size:13px;text-align:left;display:flex;flex-direction:column;gap:1px}.who button small{font-size:11.5px;color:var(--muted)}.who button[aria-pressed="true"] small{color:#0c2730}
+.who button[aria-pressed="true"]{background:var(--accent);color:#0c2730;border-color:var(--accent);font-weight:700}
+.explain{background:rgba(18,56,68,.6);border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:13.5px}
+.explain b{color:var(--accent)}
+.disc{font-size:12px;color:var(--muted);border-left:3px solid var(--warn);padding:6px 10px;background:rgba(242,184,75,.06);border-radius:0 8px 8px 0}
+/* phone */
+.phone{width:390px;max-width:100%;height:812px;background:var(--phone);border-radius:46px;border:11px solid #02090c;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px #1d3b44;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:28px;background:#02090c;border-radius:20px;z-index:5}
+.status{display:flex;justify-content:space-between;padding:14px 26px 4px;font-size:12.5px;font-weight:600}
+.screen{flex:1;overflow-y:auto;padding:8px 16px 16px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen>*{flex-shrink:0}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:#0a222a;padding:7px 4px 16px}
+.tabbar button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);padding:4px 0}
+.tabbar button[aria-current="true"]{color:var(--accent);font-weight:700}
+.tabbar svg{width:22px;height:22px}
+.hdr{display:flex;justify-content:space-between;align-items:center}
+.hdr h2{font-size:21px}
+.av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1b8f99);display:grid;place-items:center;font-weight:800;color:#0c2730;font-family:var(--display)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.card.light{background:#e9f4f5;color:#0c2730;border:0}
+.card.light .muted{color:#3d5a61}
+.card.alert{border:1.5px solid var(--warn);background:linear-gradient(135deg,rgba(242,184,75,.16),rgba(18,56,68,1))}
+.card.crit{border:1.5px solid var(--crit);background:linear-gradient(135deg,rgba(239,91,91,.18),rgba(18,56,68,1))}
+.eyebrow{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.light .eyebrow{color:#0a7c83}
+.muted{color:var(--muted);font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.big{font-family:var(--display);font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--c,var(--accent));color:#0c2730}
+.btn{background:var(--accent);color:#0c2730;border:0;border-radius:999px;padding:10px 16px;font-weight:700;font-family:var(--display);font-size:13.5px}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.sm{padding:6px 12px;font-size:12px}
+.ring{position:relative;width:96px;height:96px;flex:none}
+.ring svg{width:96px;height:96px;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:26px}
+.ring small{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:9.5px;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:8px}
+.li{display:flex;gap:10px;align-items:center;background:var(--card2);border-radius:13px;padding:10px 11px}
+.ico{width:34px;height:34px;border-radius:10px;background:rgba(63,211,216,.14);display:grid;place-items:center;flex:none;color:var(--accent)}
+.ico svg{width:19px;height:19px}
+.bar{height:8px;border-radius:5px;background:rgba(159,188,193,.18);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c,var(--accent));border-radius:5px}
+.map{position:relative;border-radius:16px;overflow:hidden;background:#0a222a;border:1px solid var(--line)}
+.map svg{display:block;width:100%;height:auto;aspect-ratio:350/230}
+.phone.tablet .screen>.map{grid-column:1;grid-row:span 4}
+.toggle{width:42px;height:24px;border-radius:999px;background:rgba(159,188,193,.3);position:relative;border:0;flex:none}
+.toggle[aria-pressed="true"]{background:var(--accent)}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle[aria-pressed="true"]::after{left:21px}
+.seg{display:flex;background:#0a222a;border-radius:999px;padding:3px;gap:2px}
+.seg button{flex:1;background:none;border:0;border-radius:999px;padding:6px 8px;font-size:12px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card2);color:var(--text);font-weight:700}
+.toast{position:absolute;left:12px;right:12px;top:46px;background:#0e2f38;border:1px solid var(--warn);border-radius:16px;padding:11px 12px;display:none;gap:10px;z-index:6;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.toast.on{display:flex}
+.steps{display:flex;flex-direction:column;gap:0}
+.st{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:9px 0;border-bottom:1px dashed rgba(159,188,193,.18)}
+.st:last-child{border:0}
+.st b{font-family:var(--display);color:var(--accent);font-size:13px}
+.surf{display:grid;grid-template-columns:86px 1fr 44px;gap:8px;align-items:center;font-size:12.5px}
+.phone.tablet{width:820px;height:640px;border-radius:32px}
+.phone.tablet .status span:nth-child(2){color:var(--accent)}
+.phone.tablet .notch{display:none}
+.phone.tablet .screen{display:grid;grid-template-columns:1fr 1fr;align-content:start;gap:12px}
+.phone.tablet .screen>.hdr{grid-column:1/-1}
+.phone.tablet .tabbar{padding-bottom:8px}
+@media (max-width:640px){.stage{display:flex;flex-direction:column-reverse;padding:0;background:#071c23}.intro{padding:14px 16px}.intro h1{font-size:24px}.devices{--z:1}.devices .phone{zoom:1;width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}.notch{display:none}.below{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="demo">ДЕМО ПРОТОТИП · SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED · NOT LIVE STADIUM DATA<br>Примерни данни · автоматичните аларми и известия са планирана функция · не е медицинско изделие · <a href="../" style="color:inherit;font-weight:700">← Creamino Lab</a></div>
+<div class="stage">
+  <div class="intro">
+    <div class="brand"><span class="omega">Ω</span><div><b>Creamino Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
+    <h1>Терена под краката ти – в телефона и таблета.</h1>
+    <div class="who" id="who" aria-label="Избери профил"></div>
+  </div>
+  <div class="devices">
+    <div class="phone tablet" id="tabletDev" aria-label="Таблет – треньорски мод">
+      <div class="status"><span>17:24</span><span>Треньорски мод · таблет</span><span>Wi-Fi 92%</span></div>
+      <div class="screen" id="screen2"></div>
+      <nav class="tabbar" id="tabbar2" aria-label="Раздели на таблета"></nav>
+    </div>
+    <div class="phone" id="phoneDev" aria-label="Приложение Creamino Me">
+      <div class="notch"></div>
+      <div class="status"><span id="clock">17:24</span><span>5G ▮▮▮ 86%</span></div>
+      <div class="toast" id="toast" role="alert"></div>
+      <div class="screen" id="screen"></div>
+      <nav class="tabbar" id="tabbar" aria-label="Раздели"></nav>
+    </div>
+  </div>
+</div>
+<section class="below">
+  <div class="explain" id="explain"></div>
+  <div class="explain" id="install"><b>Инсталирай на телефона</b><br><span id="instTxt">Android (Chrome): бутонът долу или меню ⋮ → „Добавяне към началния екран“. iPhone (Safari): бутон Сподели ⎋ → „Добави към начален екран“.</span><div style="margin-top:8px"><button class="btn sm" id="instBtn" hidden>Добави на началния екран</button></div></div>
+  <p class="disc">Препоръките са decision-support за спорт и възстановяване, не медицински съвет. Данните от часовника и камерата се ползват само с изрично съгласие и остават на телефона, ако не ги споделиш. При здравословни оплаквания – лекар.</p>
+</section>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const I={
+home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+map:'<path d="M9 4l6 2 6-2v16l-6 2-6-2-6 2V6z M9 4v16 M15 6v16"/>',
+cup:'<path d="M6 3h12l-1.5 18h-9z M5.5 8h13"/>',
+body:'<path d="M12 21s-7-4.4-9.3-9C1 8.6 3.3 4 7.5 4 9.6 4 11 5.3 12 6.6 13 5.3 14.4 4 16.5 4 20.7 4 23 8.6 21.3 12 19 16.6 12 21 12 21z"/>',
+run:'<circle cx="14" cy="4" r="2"/><path d="M8 21l3-7 3 3v5 M6 12l3-3 4 1 3 4 3 1"/>',
+user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+drop:'<path d="M12 3s7 7.6 7 12a7 7 0 0 1-14 0c0-4.4 7-12 7-12z"/>',
+moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+steps:'<path d="M7 3c2 0 3 2 3 5s-1 5-3 5-3-2-3-5 1-5 3-5z M17 9c2 0 3 2 3 5s-1 5-3 5-3-2-3-5 1-5 3-5z M5 16h4 M15 21h4"/>',
+heart:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+pill:'<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M9.5 8.5l5 7"/>',
+face:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M8.5 15c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/>',
+bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z M10 20a2 2 0 0 0 4 0"/>',
+boot:'<path d="M4 6h6v6l8 3c2 .7 3 2 3 4H4z M8 19v2 M14 19v2"/>',
+thermo:'<path d="M12 3a2 2 0 0 1 2 2v9a4 4 0 1 1-4 0V5a2 2 0 0 1 2-2z"/>',
+pin:'<path d="M12 22s7-6.3 7-12a7 7 0 0 0-14 0c0 5.7 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'};
+const svg=(k,c='currentColor')=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+/* ---------- data ---------- */
+const PERSONAS={
+ volen:{name:'Волен',age:22,mode:'Футбол · Recovery мод',init:'В',team:'ФК Демо · U19',num:10,sport:'Футбол',weight:72,sponsor:'Твоят спонсор'},
+ max:{name:'Макс',age:18,mode:'Фитнес · Върхова форма',init:'М',team:'Фитнес зала Демо · Бургас',num:7,sport:'Фитнес + сила',weight:74,sponsor:'Спонсор на залата'},
+ runner:{name:'Мария',age:48,mode:'Ежедневен мод · Тай чи',init:'М',team:'Тай чи група Демо · Морска градина',num:null,sport:'Тай чи + ходене',weight:58,sponsor:'—'},
+ coach:{name:'Треньор',age:null,mode:'Треньорски мод · таблет',init:'Т',team:'ДЮШ Демо · U12 (18 деца)',num:null,sport:'Детски футбол',weight:null,sponsor:'Спонсор на школата'}
+};
+let who='volen',tab='home',tab2='home',site2=null,faceOn=false,meds=[{n:'Витамин D',t:'08:00',on:true},{n:'Магнезий',t:'21:30',on:true},{n:'Лекарство по рецепта (въведено от теб)',t:'19:00',on:true}];
+// терени в платформата (lon,lat); стойностите са демонстративни
+const SITES=[
+ {id:'t1',n:'Опитно поле – Терен 1',city:'Бургас',lon:27.47,lat:42.50,risk:'L',srs:.18,ndmi:.41,gmax:96,vwc:21.4,type:'Научно опитно поле Point Surface',creamino:true},
+ {id:'nef',n:'Стадион „Лазур“',city:'Бургас',lon:27.50,lat:42.53,risk:'M',srs:.39,ndmi:.33,gmax:108,vwc:18.7,type:'Футболен стадион',creamino:true},
+ {id:'ber',n:'Стадион „Берое“',city:'Стара Загора',lon:25.63,lat:42.43,risk:'H',srs:.67,ndmi:.22,gmax:124,vwc:14.9,type:'Футболен стадион',creamino:true},
+ {id:'nat',n:'Национален стадион „Васил Левски“',city:'София',lon:23.335,lat:42.688,risk:'M',srs:.41,ndmi:.42,gmax:104,vwc:19.6,type:'Национален стадион',creamino:true},
+ {id:'nsa',n:'НСА „Васил Левски“ – тренировъчен терен',city:'София',lon:23.37,lat:42.65,risk:'L',srs:.24,ndmi:.47,gmax:91,vwc:24.2,type:'Университетска база',creamino:true},
+ {id:'bsr',n:'BlackSeaRama Golf',city:'Балчик',lon:28.40,lat:43.37,risk:'L',srs:.21,ndmi:.52,gmax:86,vwc:25.1,type:'Голф игрище',creamino:false},
+ {id:'pld',n:'Градски парк – алея за бягане',city:'Пловдив',lon:24.75,lat:42.14,risk:'M',srs:.36,ndmi:.29,gmax:null,vwc:null,type:'Бягане · сателитен индекс',creamino:false},
+ {id:'vrn',n:'Морска градина – трасе',city:'Варна',lon:27.93,lat:43.21,risk:'L',srs:.22,ndmi:.38,gmax:null,vwc:null,type:'Бягане · сателитен индекс',creamino:false}];
+const MACHINES=[{n:'CRIO – Стадион „Лазур“, вход Север',lon:27.502,lat:42.531,d:'0.4 км'},{n:'CRIO – Опитно поле, Бургас',lon:27.47,lat:42.50,d:'2.1 км'},{n:'CRIO – НСА, фитнес зала',lon:23.37,lat:42.65,d:''},{n:'CRIO – Берое, съблекални',lon:25.632,lat:42.432,d:''}];
+const riskC={L:'var(--ok)',M:'var(--warn)',H:'var(--crit)'},riskT={L:'нисък',M:'повишен',H:'висок'};
+// граница на България (опростен контур, lon/lat)
+const BG=[[22.68,44.22],[22.88,43.99],[23.24,43.83],[23.96,43.73],[24.89,43.70],[25.35,43.62],[25.96,43.85],[26.62,44.05],[27.26,44.12],[27.65,43.99],[28.0,43.84],[28.58,43.75],[28.6,43.54],[28.47,43.36],[28.16,43.40],[27.95,43.20],[27.9,42.87],[27.9,42.70],[27.73,42.66],[27.47,42.50],[27.7,42.42],[27.85,42.17],[28.0,41.98],[27.55,41.92],[26.95,42.0],[26.55,41.82],[26.2,41.75],[26.1,41.55],[25.6,41.32],[25.0,41.42],[24.5,41.56],[23.9,41.45],[23.25,41.4],[22.95,41.34],[22.92,41.6],[22.97,42.0],[22.6,42.15],[22.36,42.32],[22.48,42.7],[22.45,42.95],[22.75,43.2],[22.55,43.45],[22.36,43.81],[22.5,44.0]];
+const proj=(lon,lat)=>[ (lon-22.2)/(28.9-22.2)*340+5, (44.35-lat)/(44.35-41.15)*220+5 ];
+/* ---------- screens ---------- */
+const TABS=[['home','Днес','home'],['map','Карта','map'],['mix','Микс','cup'],['body','Тяло','body'],['run','Движение','run']];
+function tabbar(){$('tabbar').innerHTML=TABS.map(t=>`<button data-tab="${t[0]}" aria-current="${tab===t[0]}">${svg(t[2])}<span>${t[1]}</span></button>`).join('');$('tabbar2').innerHTML=TABS.map(t=>`<button data-tab="${t[0]}" aria-current="${tab2===t[0]}">${svg(t[2])}<span>${t[1]}</span></button>`).join('')}
+function header(title,sub){const P=PERSONAS[who];return`<div class="hdr"><div><p class="muted" style="margin:0">${sub}</p><h2>${title}</h2><span class="pill" style="margin-top:5px;background:rgba(63,211,216,.15);color:var(--accent)">${P.mode}</span></div><button class="av" data-tab="profile" aria-label="Профил">${P.init}</button></div>`}
+function ring(v,c,label){const r=40,C=2*Math.PI*r;return`<div class="ring"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="${r}" stroke="rgba(159,188,193,.18)" stroke-width="9" fill="none"/><circle cx="48" cy="48" r="${r}" stroke="${c}" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray="${C*v/100} ${C}"/></svg><b>${v}</b><small>${label}</small></div>`}
+let pmc=0;function pitchMini(hot){const u=++pmc;// малка карта на терена с горещи зони
+ return`<svg viewBox="0 0 210 136" style="width:100%;border-radius:12px;display:block"><defs><radialGradient id="h1${u}"><stop offset="0" stop-color="#ef5b5b" stop-opacity=".95"/><stop offset=".55" stop-color="#f2b84b" stop-opacity=".6"/><stop offset="1" stop-color="#f2b84b" stop-opacity="0"/></radialGradient><radialGradient id="h2${u}"><stop offset="0" stop-color="#f2b84b" stop-opacity=".8"/><stop offset="1" stop-color="#f2b84b" stop-opacity="0"/></radialGradient><pattern id="g${u}" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="rgba(255,255,255,.07)"/></pattern></defs>
+ <rect width="210" height="136" fill="#2f8a52"/><rect width="210" height="136" fill="url(#g${u})"/>${hot?'<ellipse cx="38" cy="68" rx="34" ry="26" fill="url(#h1'+u+')"/><ellipse cx="128" cy="40" rx="26" ry="18" fill="url(#h2'+u+')"/>':'<ellipse cx="150" cy="90" rx="22" ry="14" fill="url(#h2'+u+')"/>'}
+ <g fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.4"><rect x="3" y="3" width="204" height="130"/><path d="M105 3v130"/><circle cx="105" cy="68" r="17"/><rect x="3" y="38" width="32" height="60"/><rect x="175" y="38" width="32" height="60"/></g>
+ ${hot?'<rect x="10" y="48" width="40" height="40" fill="none" stroke="#fff" stroke-dasharray="4 3" stroke-width="1.6"/><text x="12" y="45" fill="#fff" font-size="9" font-weight="700" font-family="Inter">зона A2 · твърдо</text>':''}</svg>`}
+function home(){const P=PERSONAS[who];
+ if(who==='coach')return coachHome();
+ if(who==='runner')return runnerHome();
+ if(who==='max')return maxHome();
+ const s=SITES.find(x=>x.id==='ber');
+ return header('Здравей, '+P.name,'Неделя · тренировка 18:30')+`
+ <div class="card crit"><div class="between"><span class="eyebrow" style="color:var(--crit)">Сигнал за терена (демо)</span><span class="pill" style="--c:var(--crit)">SRS ${s.srs.toFixed(2)} · ${riskT[s.risk]}</span></div>
+ <h3 style="font-size:16px;margin:6px 0 4px">${s.n}: твърда и суха зона пред вратата Север</h3>
+ <p class="muted" style="margin:0 0 8px">Gmax ${s.gmax} g · влажност ${s.vwc} % · сателит NDMI ${s.ndmi}. При 30 °C рискът расте след 60-ата минута.</p>
+ ${pitchMini(true)}
+ <div class="list" style="margin-top:10px"><div class="li"><span class="ico">${svg('boot')}</span><div><b>Обувки: AG или FG с по-къси бутони</b><div class="muted">не SG – терена е твърд</div></div></div>
+ <div class="li"><span class="ico">${svg('run')}</span><div><b>+5 мин динамична загрявка</b><div class="muted">глезени, прасци, задно бедро</div></div></div></div></div>
+ <div class="card"><div class="between"><span class="eyebrow">Recovery мод · след мача в събота</span><span class="pill">24 h / 48 h</span></div><div class="steps" style="margin-top:4px"><div class="st"><b>✓ 0–2 h</b><div>Recovery Protein + охлаждане<div class="muted">изпълнено · CRIO Берое</div></div></div><div class="st"><b>Днес</b><div>Лека тренировка, без спринтове на твърдата зона<div class="muted">сън 8 h · мобилност 15 мин</div></div></div><div class="st"><b>Утре</b><div>Пълно натоварване, ако готовността е ≥ 80<div class="muted">сутрешна проверка в приложението</div></div></div></div></div>
+ <div class="grid2"><div class="card light"><span class="eyebrow">Готовност</span><div class="row" style="margin-top:6px">${ring(74,'#0a7c83','от 100')}</div><p class="muted" style="margin:4px 0 0">Сън 6 ч 40 мин · HRV −8 %</p></div>
+ <div class="card"><span class="eyebrow">Твоят микс</span><p style="margin:6px 0 2px;font-family:var(--display);font-weight:800;font-size:18px">Hydro+ Pre</p><p class="muted" style="margin:0 0 8px">600 ml · Na 700 mg/L · преди тренировка</p><button class="btn sm" data-tab="mix">Вземи от машина</button></div></div>
+ <div class="card"><div class="between"><span class="eyebrow">Най-близка CRIO машина</span><span class="muted">${svg('pin','#3fd3d8').replace('<svg','<svg style="width:15px;height:15px;vertical-align:-3px"')}</span></div>
+ <p style="margin:6px 0 2px"><b>CRIO – Берое, съблекални</b></p><p class="muted" style="margin:0">на 120 m · свободна · твоята рецепта е заредена</p></div>
+ <div class="card"><div class="between"><span class="eyebrow">Напомняне</span><button class="toggle" aria-pressed="true" aria-label="Аларма"></button></div><p style="margin:6px 0 0"><b>19:00 · Лекарство по рецепта</b></p><p class="muted" style="margin:0">въведено от теб · напомняне с аларма</p></div>`}
+function coachHome(){const s=SITES.find(x=>x.id==='nef');
+ return header('Отбор U12','Тренировка днес 17:00 · '+s.n)+`
+ <div class="card alert"><div class="between"><span class="eyebrow" style="color:var(--warn)">Условия на терена</span><span class="pill" style="--c:var(--warn)">повишен</span></div>
+ <h3 style="font-size:16px;margin:6px 0 4px">По-твърд терен в северната половина</h3>${pitchMini(true)}
+ <p class="muted" style="margin:8px 0 0">Gmax ${s.gmax} g · 26 °C</p></div>
+ <div class="card light"><span class="eyebrow">Грижа и натоварване – за децата</span>
+ <div class="list" style="margin-top:8px"><div class="li" style="background:#d6ebee"><span class="ico">${svg('run')}</span><div><b>По-кратки смени, повече почивки</b><div class="muted">игра 4 × 12 мин</div></div></div>
+ <div class="li" style="background:#d6ebee"><span class="ico">${svg('drop')}</span><div><b>Пий вода на всеки 15 мин</b><div class="muted">Cids™ микс след тренировка – ниска осмоларност</div></div></div>
+ <div class="li" style="background:#d6ebee"><span class="ico">${svg('boot')}</span><div><b>Меки наколенки / стабилизатори</b><div class="muted">причина: по-твърд терен, не травма</div></div></div></div></div>
+ <div class="card"><span class="eyebrow">Готовност на отбора днес</span><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${[['Иван',88,'var(--ok)'],['Петър',84,'var(--ok)'],['Георги',71,'var(--warn)'],['Ники',92,'var(--ok)'],['Алекс',63,'var(--warn)'],['Даниел',86,'var(--ok)']].map(k=>`<div class="surf"><span>${k[0]}</span><div class="bar"><i style="width:${k[1]}%;--c:${k[2]}"></i></div><span style="text-align:right">${k[1]}</span></div>`).join('')}</div><p class="muted" style="margin:8px 0 0">2 деца с по-ниска готовност → по-кратко време на твърдата половина</p></div>
+ <div class="card"><span class="eyebrow">Екран в съблекалнята</span><p class="muted" style="margin:6px 0 8px">Едно докосване – условията и грижата се показват на телевизора за децата и родителите.</p><button class="btn sm">Покажи на екрана</button></div>
+ <div class="card"><span class="eyebrow">Родители</span><p class="muted" style="margin:6px 0 0">18 профила на деца · съгласие от родител за всяко · без лични данни в таблото на клуба</p></div>`}
+function maxHome(){return header('Здравей, Макс','Ден за крака · зала 18:00')+`
+ <div class="card alert" style="border-color:var(--accent);background:linear-gradient(135deg,rgba(63,211,216,.16),rgba(18,56,68,1))"><span class="eyebrow">Път към върхова форма</span><div class="row" style="gap:6px;margin:8px 0 6px">${['Натрупване','Натрупване','Интензитет','Пик'].map((w,i)=>`<div style="flex:1"><div class="bar"><i style="width:${i<2?100:i==2?45:0}%"></i></div><div class="muted" style="font-size:10.5px;margin-top:3px">С${i+1} · ${w}</div></div>`).join('')}</div><p style="margin:0"><b>Седмица 3 от 4 · интензитет</b></p><p class="muted" style="margin:2px 0 0">протеин 1.8 g/kg/ден · сън ≥ 8 h · пик след 9 дни</p></div>
+ <div class="card light"><div class="between"><span class="eyebrow">Готовност за тренировка</span><span class="pill" style="--c:#0a7c83;color:#fff">CRIO-C</span></div><div class="row" style="margin-top:6px">${ring(82,'#0a7c83','от 100')}<div><b>Готов за тежък ден</b><div class="muted">сън 7:50 · HRV +4 % · пулс в покой 54</div></div></div></div>
+ <div class="card"><span class="eyebrow">Възстановяване на мускулите</span><div style="display:flex;flex-direction:column;gap:7px;margin-top:8px">${[['Гърди',92,'var(--ok)'],['Гръб',78,'var(--ok)'],['Рамене',64,'var(--warn)'],['Крака',96,'var(--ok)'],['Ръце',58,'var(--warn)']].map(m=>`<div class="surf"><span>${m[0]}</span><div class="bar"><i style="width:${m[1]}%;--c:${m[2]}"></i></div><span style="text-align:right">${m[1]} %</span></div>`).join('')}</div><p class="muted" style="margin:8px 0 0">по последните тренировки и сън · днес краката са най-свежи</p></div>
+ <div class="card"><span class="eyebrow">Днешната тренировка</span><div class="list" style="margin-top:8px"><div class="li"><span class="ico">${svg('run')}</span><div><b>Клек 5 × 5 · напад · мъртва тяга</b><div class="muted">обем +5 % спрямо миналата седмица</div></div></div><div class="li"><span class="ico">${svg('heart')}</span><div><b>Кардио 15 мин – на пътека, не на бетон</b><div class="muted">по-малък удар за коленете след клекове</div></div></div></div></div>
+ <div class="grid2"><div class="card"><span class="eyebrow">Микс след залата</span><p style="margin:6px 0 2px;font-weight:800;font-size:17px">Recovery Protein</p><p class="muted" style="margin:0 0 8px">0.3 g/kg ≈ 22 g протеин · 500 ml</p><button class="btn sm" data-tab="mix">Към машината</button></div>
+ <div class="card"><span class="eyebrow">Крачки</span><div class="big" style="margin-top:6px">7 860</div><div class="bar" style="margin-top:6px"><i style="width:66%"></i></div><p class="muted" style="margin:6px 0 0">цел 12 000</p></div></div>
+ <div class="card"><div class="between"><span class="eyebrow">Напомняне</span><button class="toggle" aria-pressed="true" aria-label="Аларма"></button></div><p style="margin:6px 0 0"><b>21:30 · Креатин / добавка (въведено от теб)</b></p><p class="muted" style="margin:0">сън до 23:00 – утре ден за гръб</p></div>
+ <div class="card"><span class="eyebrow">Най-близка CRIO машина</span><p style="margin:6px 0 2px"><b>CRIO – фитнес зала, рецепция</b></p><p class="muted" style="margin:0">в залата · рецептата е заредена · чаша „МАКС · 7“</p></div>`}
+function runnerHome(){return header('Добро утро, Мария','Тай чи в парка · 08:00')+`
+ <div class="card light"><div class="between"><span class="eyebrow">Ежедневен баланс</span><span class="pill" style="--c:#0a7c83;color:#fff">добре</span></div><div class="row" style="margin-top:6px">${ring(78,'#0a7c83','от 100')}<div><b>Спокоен, добър ден</b><div class="muted">сън 7:20 · пулс в покой 62 · стрес нисък</div></div></div></div>
+ <div class="card"><span class="eyebrow">Днешната практика</span><div class="list" style="margin-top:8px"><div class="li"><span class="ico">${svg('body')}</span><div><b>Тай чи · 30 мин · Морска градина</b><div class="muted">трева, равна и суха · сянка до 10:00 · 18 °C</div></div></div><div class="li"><span class="ico">${svg('steps')}</span><div><b>Разходка 40 мин – 6 000 крачки</b><div class="muted">по алеята, не по мокрите плочки</div></div></div></div></div>
+ <div class="card"><div class="between"><span class="eyebrow">Баланс и стабилност</span><span class="pill">+6 % за месец</span></div><svg viewBox="0 0 300 60" style="width:100%;margin-top:6px"><path d="M0 46 C40 44 70 40 100 38 S170 30 200 26 S260 20 300 16" fill="none" stroke="#3fd3d8" stroke-width="2.4"/></svg><p class="muted" style="margin:0">от часовника: стойка на един крак, плавност на движението</p></div>
+ <div class="grid2"><div class="card"><span class="eyebrow">Твоят микс</span><p style="margin:6px 0 2px;font-weight:800;font-size:17px">Herbal Daily</p><p class="muted" style="margin:0">400 ml · билков, ниско съдържание на захар</p></div>
+ <div class="card"><div class="between"><span class="eyebrow">Напомняне</span><button class="toggle" aria-pressed="true" aria-label="Аларма"></button></div><p style="margin:6px 0 0"><b>09:00 · Витамин D</b></p><p class="muted" style="margin:0">20:00 · лекарство (въведено от теб)</p></div></div>`}
+function surfaces(light){const S=[['Асфалт',78,1.0,'var(--crit)'],['Тартан',8,0.85,'var(--warn)'],['Трева',9,0.7,'var(--ok)'],['Пътека/горски',5,0.8,'var(--ok)'],['Пясък',0,0.6,'var(--accent)']];
+ return`<div style="display:flex;flex-direction:column;gap:7px;margin-top:8px">${S.map(s=>`<div class="surf"><span>${s[0]}</span><div class="bar"><i style="width:${s[1]}%;--c:${s[3]}"></i></div><span style="text-align:right;font-variant-numeric:tabular-nums">${s[1]} %</span></div>`).join('')}</div><p class="${light?'muted':'muted'}" style="margin:8px 0 0">Удар спрямо асфалт: тартан 0.85 · пътека 0.8 · трева 0.7 · пясък 0.6 (по-малък удар, повече мускулна работа)</p>`}
+function mapScreen(){const pts=SITES.map(s=>{const[x,y]=proj(s.lon,s.lat);return`<g data-site="${s.id}" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="9" fill="${riskC[s.risk]}" opacity=".25"/><circle cx="${x}" cy="${y}" r="5" fill="${riskC[s.risk]}" stroke="#0c2730" stroke-width="1.5"/>${s.creamino?`<text x="${x+7}" y="${y-6}" font-size="9" fill="#3fd3d8" font-weight="800">Ω</text>`:''}</g>`}).join('');
+ const mach=MACHINES.map(m=>{const[x,y]=proj(m.lon,m.lat);return`<rect x="${x-3.5}" y="${y+5}" width="7" height="9" rx="1.5" fill="#d4a72c" stroke="#0c2730"/>`}).join('');
+ const poly=BG.map(p=>proj(p[0],p[1]).map(v=>v.toFixed(1)).join(',')).join(' ');
+ const cities=[['София',23.32,42.70],['Пловдив',24.75,42.14],['Варна',27.91,43.21],['Бургас',27.47,42.50],['Ст. Загора',25.63,42.43],['Русе',25.96,43.85]].map(c=>{const[x,y]=proj(c[1],c[2]);return`<text x="${x}" y="${y+16}" font-size="8.5" fill="#9fbcc1" text-anchor="middle">${c[0]}</text>`}).join('');
+ return header('Терени в България','Намери къде спортуваш')+`
+ <div class="seg"><button aria-pressed="true">Риск</button><button aria-pressed="false">Сателит NDMI</button><button aria-pressed="false">CRIO машини</button></div>
+ <div class="map"><svg viewBox="0 0 350 230" role="img" aria-label="Карта на България с терените в платформата"><defs><linearGradient id="sea" x1="0" x2="1"><stop offset="0" stop-color="#0a222a"/><stop offset="1" stop-color="#0d3440"/></linearGradient></defs><rect width="350" height="230" fill="#0b2a33"/><polygon points="${poly}" fill="#174654" stroke="#3fd3d8" stroke-width="1.3" stroke-linejoin="round"/><text x="322" y="150" font-size="9" fill="#3fd3d8" opacity=".6" transform="rotate(90 322 150)">Черно море</text>${cities}${mach}${pts}</svg></div>
+ <div class="row muted" style="gap:14px;flex-wrap:wrap"><span><span class="pill" style="--c:var(--ok)">●</span> нисък</span><span><span class="pill" style="--c:var(--warn)">●</span> повишен</span><span><span class="pill" style="--c:var(--crit)">●</span> висок</span><span style="color:var(--accent);font-weight:800">Ω</span> с Creamino <span><span class="pill" style="--c:var(--gold)">▮</span> CRIO</span></div>
+ <div class="list" id="sitelist">${SITES.map(s=>`<button class="li" data-site="${s.id}" style="border:0;text-align:left;width:100%"><span class="ico" style="background:${riskC[s.risk]}22;color:${riskC[s.risk]}">${svg('pin')}</span><div style="flex:1"><b>${s.n}</b><div class="muted">${s.city} · ${s.type}${s.creamino?' · Creamino':' · само сателит'}</div></div><span class="pill" style="--c:${riskC[s.risk]}">${riskT[s.risk]}</span></button>`).join('')}</div>
+ <p class="muted" style="margin:0">Терените с Ω имат Wi-Fi сензориране и полеви измервания; останалите – сателитен индекс на влагата (NDMI, Sentinel-2) с по-ниска точност.</p>`}
+function siteCard(id){const s=SITES.find(x=>x.id===id);
+ return header(s.n,s.city+' · '+s.type)+`
+ <div class="card ${s.risk==='H'?'crit':s.risk==='M'?'alert':''}"><div class="between"><span class="eyebrow">Днес</span><span class="pill" style="--c:${riskC[s.risk]}">SRS ${s.srs.toFixed(2)} · ${riskT[s.risk]}</span></div>${pitchMini(s.risk!=='L')}
+ <div class="grid2" style="margin-top:10px"><div><div class="muted">Твърдост</div><div class="big">${s.gmax??'—'}<small style="font-size:13px"> g</small></div></div><div><div class="muted">Влажност</div><div class="big">${s.vwc??'—'}<small style="font-size:13px"> %</small></div></div><div><div class="muted">Сателит NDMI</div><div class="big">${s.ndmi}</div></div><div><div class="muted">Източник</div><div style="font-weight:700;margin-top:6px">${s.creamino?'Creamino Wi-Fi + TDR/Clegg':'Sentinel-2'}</div></div></div></div>
+ <div class="card"><span class="eyebrow">Тенденция NDMI · 2026</span><svg viewBox="0 0 300 70" style="width:100%;margin-top:6px"><path d="M0 40 C30 38 50 30 80 34 S130 20 160 26 S210 50 240 44 S280 36 300 30" fill="none" stroke="#3fd3d8" stroke-width="2.2"/><path d="M0 40 C30 38 50 30 80 34 S130 20 160 26 S210 50 240 44 S280 36 300 30 L300 70 L0 70Z" fill="rgba(63,211,216,.12)"/></svg></div>
+ <div class="row" style="gap:8px"><button class="btn" data-tab="home">Тренирам тук</button><button class="btn ghost" data-tab="map">← Карта</button></div>`}
+function cupSVG(name,num,sponsor){return`<svg viewBox="0 0 160 200" style="width:170px;height:auto;flex:none" role="img" aria-label="Брандирана чаша"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#0c2730"/><stop offset=".5" stop-color="#174654"/><stop offset="1" stop-color="#0c2730"/></linearGradient></defs>
+ <path d="M30 34 H130 L118 190 H42 Z" fill="#123844" stroke="#3fd3d8" stroke-width="1.5"/><rect x="24" y="20" width="112" height="16" rx="5" fill="#0a222a" stroke="#3fd3d8" stroke-width="1.5"/><rect x="66" y="10" width="28" height="12" rx="3" fill="#d4a72c"/>
+ <text x="80" y="78" text-anchor="middle" font-family="Inter" font-weight="800" font-size="34" fill="#3fd3d8">Ω</text><text x="80" y="98" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#e9f4f5" letter-spacing="1.5">CREAMINO</text>
+ <text x="80" y="128" text-anchor="middle" font-family="Inter" font-weight="800" font-size="17" fill="#e9f4f5">${name.toUpperCase()}${num?' · '+num:''}</text>
+ <rect x="50" y="146" width="60" height="22" rx="4" fill="none" stroke="#d4a72c" stroke-dasharray="3 2"/><text x="80" y="161" text-anchor="middle" font-family="Inter" font-size="8.5" fill="#d4a72c">${sponsor}</text></svg>`}
+function mix(){const P=PERSONAS[who];const kid=who==='coach';const fit=who==='max';
+ return header('Твоят микс','Изчислен за днешната тренировка')+`
+ <div class="card light"><div class="between"><span class="eyebrow">Защо този микс</span><span class="pill" style="--c:#0a7c83;color:#fff">${fit?'CRIO-C':'CRIO-H'}</span></div>
+ <p style="margin:6px 0 0">${fit?'Силова тренировка за крака · 75 мин · зала 22 °C':'30 °C · суха и твърда повърхност · 90 мин интензивна тренировка · загуба на пот ≈ 1.2 l/ч'}</p><p class="muted" style="margin:4px 0 0">${fit?'CRIO-C = механично натоварване → протеин и въглехидрати за възстановяване на мускулите':'CRIO-H = термичен/хидратационен стрес → акцент върху течности и електролити'}</p></div>
+ <div class="card"><div class="row" style="align-items:center;gap:12px">${cupSVG(kid?'U12':P.name,P.num,P.sponsor)}<div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">Брандирана чаша</span><p style="margin:0;font-size:13px">Името и номерът на спортиста, логото на отбора и мястото за спонсор – печат при всяко дозиране.</p></div></div></div>
+ <div class="card"><span class="eyebrow">Протокол за деня</span><div class="steps">
+ <div class="st"><b>Преди</b><div>${kid?'Cids™ · 300 ml · Na 300 mg/L':fit?'Daily · 400 ml + банан':'Hydro+ Pre · 600 ml · Na 700 mg/L'}<div class="muted">30–45 мин преди загрявка</div></div></div>
+ <div class="st"><b>По време</b><div>${kid?'Вода на всеки 15 мин':fit?'Вода 500 ml/ч между сериите':'500–700 ml/ч · 30–45 g/ч въглехидрати'}<div class="muted">${fit?'почивки 2–3 мин':'почивки на 20 мин'}</div></div></div>
+ <div class="st"><b>0–2 ч</b><div>${kid?'Cids™ Recovery · плод + вода':'Recovery Protein · 0.3 g/kg протеин + 1.0 g/kg въглехидрати'}<div class="muted">CRIO машина в съблекалнята</div></div></div>
+ <div class="st"><b>24 ч</b><div>Сън ≥ 8 ч · лека мобилност 15 мин<div class="muted">прасци, задно бедро</div></div></div>
+ <div class="st"><b>48 ч</b><div>Без интензивни спринтове на твърда повърхност<div class="muted">проверка на готовността сутрин</div></div></div></div></div>
+ <div class="card"><span class="eyebrow">Вземи от машината</span><div class="li" style="margin-top:8px"><span class="ico" style="background:rgba(212,167,44,.18);color:#d4a72c">${svg('cup')}</span><div style="flex:1"><b>${fit?'CRIO – фитнес зала, рецепция':'CRIO – Берое, съблекални'}</b><div class="muted">${fit?'в залата':'120 m'} · рецептата е заредена · NFC/QR</div></div></div>
+ <div class="row" style="margin-top:10px;gap:8px"><button class="btn" id="dispense">Сканирай и дозирай</button><button class="btn ghost">Алтернатива: Vegan</button></div></div>
+ <p class="muted" style="margin:0">WADA и алергии: проверени ✓ · Диапазоните подлежат на одобрение от диетолог; не е медицински съвет.</p>`}
+function bodyScreen(){return header('Тяло','Часовник + телефон · днес')+`
+ <div class="grid2"><div class="card"><div class="row"><span class="ico">${svg('steps')}</span><span class="muted">Крачки</span></div><div class="big" style="margin-top:6px">9 412</div><div class="bar" style="margin-top:6px"><i style="width:78%"></i></div></div>
+ <div class="card"><div class="row"><span class="ico">${svg('moon')}</span><span class="muted">Сън</span></div><div class="big" style="margin-top:6px">6:40</div><div class="muted">дълбок 1:05 · цел 8:00</div></div>
+ <div class="card"><div class="row"><span class="ico">${svg('heart')}</span><span class="muted">Пулс в покой</span></div><div class="big" style="margin-top:6px">58</div><div class="muted">HRV 61 ms · −8 %</div></div>
+ <div class="card"><div class="row"><span class="ico">${svg('thermo')}</span><span class="muted">Темп. на кожата</span></div><div class="big" style="margin-top:6px">+0.3°</div><div class="muted">спрямо твоята норма</div></div></div>
+ <div class="card"><div class="between"><div class="row"><span class="ico">${svg('face')}</span><div><b>Бърза проверка с камерата</b><div class="muted">по избор · само със съгласие</div></div></div><button class="toggle" id="faceT" aria-pressed="${faceOn}" aria-label="Проверка с камерата"></button></div>
+ ${faceOn?`<div class="list" style="margin-top:10px"><div class="li"><div style="flex:1"><b>Устни и кожа</b><div class="muted">признаци на дехидратация – леки</div></div><span class="pill" style="--c:var(--warn)">пий вода</span></div>
+ <div class="li"><div style="flex:1"><b>Очи</b><div class="muted">умора/зачервяване – умерено</div></div><span class="pill" style="--c:var(--warn)">почивка</span></div>
+ <div class="li"><div style="flex:1"><b>Зрение</b><div class="muted">не е изследване; напомняне за преглед при очен лекар веднъж годишно</div></div><span class="pill">напомни</span></div></div>
+ <p class="muted" style="margin:8px 0 0">Wellness сигнали, не диагноза. Обработката е на телефона; снимки не се пазят.</p>`:`<p class="muted" style="margin:8px 0 0">Изключено. Включи, ако искаш приложението да следи признаци на умора и дехидратация.</p>`}</div>
+ <div class="card"><div class="between"><span class="eyebrow">Лекарства и добавки</span><button class="btn sm ghost" id="addMed">+ Добави</button></div><div class="list" style="margin-top:8px">${meds.map((m,i)=>`<div class="li"><span class="ico">${svg('pill')}</span><div style="flex:1"><b>${m.n}</b><div class="muted">${m.t} · аларма</div></div><button class="toggle" data-med="${i}" aria-pressed="${m.on}" aria-label="Аларма за ${m.n}"></button></div>`).join('')}</div>
+ <p class="muted" style="margin:8px 0 0">Ти въвеждаш какво и кога. Приложението само напомня, не предписва.</p></div>
+ <div class="card"><span class="eyebrow">Свързани</span><p class="muted" style="margin:6px 0 0">Apple Health · Google Fit / Health Connect · Garmin · Polar · стъпки, сън, пулс, HRV, температура</p></div>`}
+function runScreen(){return header('Движение','Как повърхността натоварва тялото')+`
+ <div class="card light"><span class="eyebrow">Последните 7 дни · 42 км</span>${surfaces(true)}</div>
+ <div class="card alert"><span class="eyebrow" style="color:var(--warn)">Анализ на движението</span><p style="margin:6px 0 4px"><b>На асфалт крачката ти се скъсява с 6 % след 8-ия км</b></p><p class="muted" style="margin:0">каданс 168 → 176 · вертикално трептене +9 % · признак на умора в прасците</p></div>
+ <div class="card"><span class="eyebrow">Препоръка</span><div class="list" style="margin-top:8px"><div class="li"><span class="ico">${svg('run')}</span><div><b>Утре: 8 км по трева/пътека</b><div class="muted">по-нисък удар, повече стабилизация</div></div></div><div class="li"><span class="ico">${svg('boot')}</span><div><b>Обувки с повече амортисьор за асфалт</b><div class="muted">текущите: 640 км – време за смяна</div></div></div><div class="li"><span class="ico">${svg('cup')}</span><div><b>Recovery Vegan до 30 мин след бягане</b><div class="muted">най-близка CRIO машина: 1.3 км</div></div></div></div></div>
+ <p class="muted" style="margin:0">Данни от часовника (GPS, каданс, крачка) + карта на повърхностите от сателита и Creamino.</p>`}
+function profile(){const P=PERSONAS[who];return header('Профил','Отбор, спонсор и поверителност')+`
+ <div class="card light"><div class="row"><span class="av" style="width:54px;height:54px;font-size:22px">${P.init}</span><div><h3 style="font-size:18px">${P.name}</h3><p class="muted" style="margin:0">${P.team} · ${P.sport}</p></div></div></div>
+ <div class="card"><span class="eyebrow">Отбор и спонсор</span><div class="list" style="margin-top:8px"><div class="li"><span class="ico">${svg('shield')}</span><div><b>${P.team}</b><div class="muted">треньорът вижда само готовност и аларми – не лични данни</div></div></div><div class="li"><span class="ico" style="color:#d4a72c;background:rgba(212,167,44,.16)">${svg('cup')}</span><div><b>${P.sponsor}</b><div class="muted">логото е на чашата и в приложението на отбора</div></div></div></div></div>
+ <div class="card"><span class="eyebrow">Съгласия (GDPR)</span><div class="list" style="margin-top:8px">${[['Часовник: крачки, сън, пулс',true],['Местоположение – за терена и машината',true],['Камера – проверка на умора',faceOn],['Споделяне с треньора (агрегирано)',true],['Научни изследвания (анонимно)',false]].map(c=>`<div class="between li"><span>${c[0]}</span><button class="toggle" aria-pressed="${c[1]}" aria-label="${c[0]}"></button></div>`).join('')}</div><p class="muted" style="margin:8px 0 0">Данните се съхраняват в ЕС. За деца до 14 г. – съгласие от родител.</p></div>
+ <button class="btn ghost" data-tab="home">← Назад</button>`}
+const EXPL={home:'<b>Днес</b> – всеки има свой мод: Волен (футбол, Recovery), Макс (фитнес, върхова форма), Мария (ежедневен, тай чи), Треньорът (таблет). За Волен: сигналът (демо, примерни данни) идва от картата на терена (SRS от Creamino) и времето; автоматичните известия са планирана функция. Казва какви обувки, колко загрявка и какво да пиеш – преди да влезеш на терена.',map:'<b>Карта на България</b> – всички терени в платформата. С Ω са тези с Wi-Fi сензориране и полеви измервания; останалите са със сателитен индекс NDMI. Златните квадратчета са CRIO машините. Докосни терен.',mix:'<b>Микс и възстановяване</b> – препоръката следва механизма CRIO-H/C/R от дисертацията: топлинен стрес → течности и електролити; механичен → протеин и охлаждане. Чашата е брандирана с името, отбора и спонсора.',body:'<b>Тяло</b> – стъпки, сън, пулс и HRV от часовника; по избор бърза проверка с камерата (wellness сигнали, не диагноза); напомняния за лекарства и добавки с аларма.',run:'<b>Бягане</b> – колко бягаш по асфалт, тартан, трева или пътека и как това натоварва краката. Предлага по-мека повърхност и нов маршрут.',profile:'<b>Профил</b> – отбор, спонсор и съгласия. Треньорът вижда само готовност и аларми; личните данни остават у спортиста.',site:'<b>Терен</b> – днешните стойности: твърдост, влажност, сателитен индекс и тенденция.'};
+let siteSel=null;
+function screenFor(t,sel){return t==='home'?home():t==='map'?mapScreen():t==='mix'?mix():t==='body'?bodyScreen():t==='run'?runScreen():t==='site'?siteCard(sel):profile()}
+function render(keep){tabbar();
+ const sv=who;who='coach';const h2=screenFor(tab2,site2);who=sv;
+ const s2=$('screen2'),y2=s2.scrollTop;s2.innerHTML=h2;s2.scrollTop=keep==='t'?y2:0;
+ const sc=$('screen'),y1=sc.scrollTop;sc.innerHTML=screenFor(tab,siteSel);sc.scrollTop=keep==='p'?y1:0;
+ $('explain').innerHTML=EXPL[tab]||'';
+ $('who').innerHTML=Object.entries(PERSONAS).map(([k,p])=>`<button data-who="${k}" aria-pressed="${k===who||(k==='coach'&&false)}"><b>${p.name}${p.age?' · '+p.age+' г.':''}</b><small>${p.mode}</small></button>`).join('')}
+function toast(html,ms=4200){const t=$('toast');t.innerHTML=html;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),ms)}
+document.addEventListener('click',e=>{
+ const onTab=!!e.target.closest('#tabletDev');
+ const w=e.target.closest('[data-who]');if(w){const k=w.dataset.who;
+   if(k==='coach'){const t=$('tabletDev');tab2='home';render('p');if(getComputedStyle(t).display==='none'){who='coach';tab='home';render()}else{t.classList.remove('dev-pulse');void t.offsetWidth;t.classList.add('dev-pulse')}return}
+   who=k;tab='home';render('t');return}
+ const s=e.target.closest('[data-site]');if(s){if(onTab){site2=s.dataset.site;tab2='site';render('p')}else{siteSel=s.dataset.site;tab='site';render('t')}return}
+ const tb=e.target.closest('[data-tab]');if(tb){if(onTab){tab2=tb.dataset.tab;render('p')}else{tab=tb.dataset.tab;render('t')}return}
+ if(e.target.id==='faceT'){faceOn=!faceOn;render(onTab?'t':'p');return}
+ const m=e.target.closest('[data-med]');if(m){const k=+m.dataset.med;meds[k].on=!meds[k].on;m.setAttribute('aria-pressed',meds[k].on);return}
+ if(e.target.id==='addMed'){meds.push({n:'Нова добавка',t:'12:00',on:true});render(onTab?'t':'p');return}
+ if(e.target.id==='dispense'){toast(`<span class="ico" style="color:#d4a72c;background:rgba(212,167,44,.16)">${svg('cup')}</span><div><b>Дозиране… ${who==='max'?'500 ml Recovery Protein':'600 ml Hydro+ Pre'}</b><div class="muted">чашата се печата с твоето име · 18 s</div></div>`);return}
+ const tg=e.target.closest('.toggle');if(tg&&!tg.id&&!tg.dataset.med){tg.setAttribute('aria-pressed',tg.getAttribute('aria-pressed')!=='true')}
+ const sg=e.target.closest('.seg button');if(sg){sg.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===sg))}
+});
+let dp=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;$("instBtn").hidden=false});
+$("instBtn").addEventListener("click",async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$("instBtn").hidden=true});
+if(matchMedia("(display-mode: standalone)").matches){$("install").hidden=true}
+render();
+setTimeout(()=>toast(`<span class="ico" style="color:var(--warn);background:rgba(242,184,75,.16)">${svg('bell')}</span><div><b>Стадион „Берое“: твърда зона A2</b><div class="muted">AG обувки · +5 мин загрявка · Hydro+ Pre</div></div>`),900);
+if(location.hash.length>1){const h=location.hash.slice(1);if(PERSONAS[h]){who=h;render()}else if(['home','map','mix','body','run','profile'].includes(h)){tab=h;render()}}
+})();
+</script>
+</body>
+</html>
