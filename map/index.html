@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creamino™ Карта на спортните терени в България</title>
+<meta name="description" content="Тревни терени, ски писти и лека атлетика в България с геолокация и сателитен индекс на състоянието (Sentinel-2). Point Surface · Creamino™.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7f2;--panel:#fff;--ink:#0e1c15;--mute:#5b6b62;--line:#dfe7dc;--A:#138a45;--B:#7cbf3c;--C:#e3b52b;--D:#d0602a;--N:#9aa59e;--ref:#e0a80b;--snow:#2a8fd6;--nosnow:#b9a07a;--trk:#c2412d;--S:#0b6fb8}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 "Schibsted Grotesk",system-ui,sans-serif;display:grid;grid-template-rows:auto 1fr auto;min-height:100vh}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 16px;background:#0b1a14;color:#e6f1ea}
+header b{font-size:18px}header a{color:#9fe0b8}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.tab{min-height:40px;padding:0 14px;border-radius:20px;border:1px solid #2f5a46;background:transparent;color:#e6f1ea;font:600 14px inherit;cursor:pointer}
+.tab[aria-selected=true]{background:#e6f1ea;color:#0b1a14}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:0}
+#map{min-height:420px}
+aside{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;gap:10px;padding:12px;min-height:0;overflow:hidden}
+h1{font-size:20px;line-height:1.15;margin:0}
+.sub{color:var(--mute);font-size:13px;margin:0}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:6px 8px}.kpi b{display:block;font-size:20px}.kpi span{font-size:12px;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:36px;padding:0 10px;border-radius:18px;border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff}
+input,select{width:100%;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font:16px inherit;padding:0 10px;color:var(--ink)}
+ul{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border-top:1px solid var(--line)}
+li{padding:7px 2px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:8px;align-items:center}
+li:hover{background:var(--bg)}li .t{flex:1}li small{display:block;color:var(--mute);font-size:12px}
+.badge{min-width:38px;text-align:center;font-weight:800;border-radius:7px;padding:1px 6px;color:#fff;font-size:13px;white-space:nowrap}
+.legend{background:#fff;padding:6px 8px;border-radius:8px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px #0003}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.pop h3{margin:0 0 3px;font-size:15px}.pop .st{color:var(--mute);font-size:12px}
+.tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:10px;background:var(--ref);color:#1a1300;margin:3px 0}
+footer{font-size:12px;color:var(--mute);padding:8px 16px;background:#fff;border-top:1px solid var(--line)}
+button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{outline:3px solid var(--ref);outline-offset:2px}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr);grid-template-rows:60vh auto}aside{border-left:0;border-top:1px solid var(--line);overflow:visible}ul{max-height:50vh}}
+</style></head><body>
+<header><b>Ω Creamino™ · Карта на спортните терени</b><a href="https://pointsurface.com/creamino/">Point Surface</a>
+<div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="track" aria-selected="false">Лека атлетика</button></div></header>
+<main><div id="map"></div>
+<aside><h1 id="h1"></h1><p class="sub" id="sub"></p>
+<div class="kpis" id="kpis"></div><div class="chips" id="chips"></div>
+<input type="search" id="q" placeholder="Търси град или име…" aria-label="Търсене">
+<select id="sort" aria-label="Подреждане"></select>
+<ul id="list"></ul></aside></main>
+<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Сателитна основа: Esri World Imagery.</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+{
+const TN={F:'Футболен терен',S:'Стадион',G:'Голф игрище'};
+const GN={A:'A · горна четвърт',B:'B · над средното',C:'C · под средното',D:'D · долна четвърт',L:'Ниска растителност',X:'Изкуствена настилка',S:'Твърде малък за сателита',"?":'Няма чиста снимка'};
+const GC={A:'#138a45',B:'#7cbf3c',C:'#e3b52b',D:'#d0602a'};
+const gcol=g=>GC[g]||'#9aa59e';
+const scol=p=>p==null?'#9aa59e':p>=50?'#2a8fd6':p>=10?'#8cc3ea':'#b9a07a';
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const map=L.map('map',{preferCanvas:true}).fitBounds([[41.2,22.3],[44.25,28.65]]);
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri World Imagery'});
+L.control.layers({'Карта':osm,'Сателит':sat},null,{position:'topleft'}).addTo(map);
+const layer=L.layerGroup().addTo(map);
+const legend=L.control({position:'bottomleft'});legend.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.id='legend';return d};legend.addTo(map);
+let D=null,view='turf',q='',on={},refOnly=false,sortBy='',marks=[];
+const V={
+ turf:{rows:()=>D.turf,ll:o=>[o[1],o[2]],name:o=>o[4]||TN[o[0]],town:o=>o[5],col:o=>o[6]?'#e0a80b':gcol(o[8]),ref:o=>!!o[6],vis:o=>on[o[0]]&&(!refOnly||o[6]),
+  badge:o=>o[9]!=null?[o[8]+' '+o[9],gcol(o[8])]:[o[8]==='X'?'изк.':'–','#9aa59e'],
+  sorts:[['score','По оценка ↓',(a,b)=>(b[9]??-1)-(a[9]??-1)],['scoreAsc','По оценка ↑',(a,b)=>(a[9]??999)-(b[9]??999)],['town','По град',(a,b)=>a[5].localeCompare(b[5],'bg')]],
+  chips:[['F','Футболни'],['S','Стадиони'],['G','Голф'],['R','Point Surface']],
+  h1:n=>`${n.toLocaleString('bg')} тревни терена, оценени от сателита`,sub:()=>`Sentinel-2, данни към ${D.asof}. Сравнителна оценка A–D.`,
+  legend:'<b>Оценка</b><br><i class="dot" style="background:#138a45"></i>A <i class="dot" style="background:#7cbf3c"></i>B <i class="dot" style="background:#e3b52b"></i>C <i class="dot" style="background:#d0602a"></i>D<br><i class="dot" style="background:#9aa59e"></i>без оценка <i class="dot" style="background:#e0a80b"></i>Point Surface',
+  kpis:v=>{const c={A:0,D:0};v.forEach(o=>{if(o[8] in c)c[o[8]]++});return[[v.length,'терена'],[c.A,'с A'],[c.D,'с D']]},
+  pop:o=>`<h3>${esc(o[4]||TN[o[0]])}</h3><div class="st">${TN[o[0]]} · ${esc(o[5])} · ${o[3].toLocaleString('bg')} m²</div>${o[6]?`<span class="tag">Point Surface: ${esc(o[6])}</span>`:''}<div style="margin-top:5px"><span class="badge" style="background:${gcol(o[8])}">${o[8]}${o[9]!=null?' · '+o[9]+'/100':''}</span> ${GN[o[8]]||''}</div><div class="st">NDVI ${o[10]??'–'} · NDMI ${o[11]??'–'} · снимка ${esc(o[12])||'–'}</div>`},
+ piste:{rows:()=>D.piste,ll:o=>[o[0],o[1]],name:o=>o[2]||(o[4]==='nordic'?'Писта за ски бягане':'Ски писта'),town:o=>o[8],col:o=>scol(o[6]),ref:()=>false,vis:o=>(on.down&&o[4]==='downhill')||(on.nord&&o[4]==='nordic'),
+  badge:o=>[o[6]!=null?Math.round(o[6])+'%':'–',scol(o[6])],
+  sorts:[['snow','По сняг ↓',(a,b)=>(b[6]??-1)-(a[6]??-1)],['town','По курорт',(a,b)=>a[8].localeCompare(b[8],'bg')]],chips:[['down','Спускане'],['nord','Ски бягане']],
+  h1:n=>`${n} ски писти: къде има сняг`,sub:()=>`Последна безоблачна снимка Sentinel-2, към ${D.asof}.`,
+  legend:'<b>Сняг</b><br><i class="dot" style="background:#2a8fd6"></i>≥50% <i class="dot" style="background:#8cc3ea"></i>10–50%<br><i class="dot" style="background:#b9a07a"></i>&lt;10% <i class="dot" style="background:#9aa59e"></i>облачно',
+  kpis:v=>[[v.length,'писти'],[v.filter(o=>o[6]>=50).length,'със сняг ≥50%'],[Math.round(v.reduce((a,o)=>a+o[5],0)/1000)+' km','дължина']],
+  pop:o=>`<h3>${esc(o[2]||'Ски писта')}</h3><div class="st">${o[4]==='nordic'?'Ски бягане':'Спускане'}${o[3]?' · '+esc(o[3]):''} · ${esc(o[8])} · ${(o[5]/1000).toFixed(1)} km</div><div style="margin-top:5px"><span class="badge" style="background:${scol(o[6])}">${o[6]!=null?Math.round(o[6])+'% сняг':'облачно'}</span> <span class="st">снимка ${esc(o[7])||'–'}</span></div>`},
+ track:{rows:()=>D.track,ll:o=>[o[0],o[1]],name:o=>o[2]||'Лекоатлетическа писта',town:o=>o[3],col:()=>'#c2412d',ref:()=>false,vis:()=>true,badge:o=>[(o[4]/1e4).toFixed(2)+' ha','#c2412d'],
+  sorts:[['town','По град',(a,b)=>a[3].localeCompare(b[3],'bg')],['area','По площ',(a,b)=>b[4]-a[4]]],chips:[],
+  h1:n=>`${n} съоръжения за лека атлетика`,sub:()=>'Синтетичните писти не се оценяват от сателита.',legend:'<i class="dot" style="background:#c2412d"></i>писта / сектор',
+  kpis:v=>[[v.length,'обекта'],[new Set(v.map(o=>o[3])).size,'населени места'],['–','сател. оценка']],
+  pop:o=>`<h3>${esc(o[2]||'Лекоатлетическа писта')}</h3><div class="st">${esc(o[3])} · ${o[4].toLocaleString('bg')} m²</div>`}
+};
+const A=()=>V[view];
+function setView(v){view=v;for(const t of document.querySelectorAll('.tab'))t.setAttribute('aria-selected',t.dataset.v===v);
+ on={F:1,S:1,G:1,down:1,nord:1};refOnly=false;sortBy=A().sorts[0][0];
+ $('sort').innerHTML=A().sorts.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
+ $('chips').innerHTML=A().chips.map(([k,l])=>`<button class="chip" data-c="${k}" aria-pressed="${k!=='R'}">${l}</button>`).join('');
+ for(const b of $('chips').children)b.onclick=()=>{const c=b.dataset.c;if(c==='R'){refOnly=!refOnly;b.setAttribute('aria-pressed',refOnly)}else{on[c]=!on[c];b.setAttribute('aria-pressed',!!on[c])}render()};
+ $('h1').textContent=A().h1(A().rows().length);$('sub').textContent=A().sub();$('legend').innerHTML=A().legend;render()}
+function render(){const a=A(),R=a.rows();
+ const vis=R.map((o,i)=>[o,i]).filter(([o])=>a.vis(o)&&(!q||(a.name(o)+' '+a.town(o)).toLowerCase().includes(q)));
+ layer.clearLayers();marks=[];
+ [...vis].sort((x,y)=>a.ref(x[0])-a.ref(y[0])).forEach(([o,i])=>{const m=L.circleMarker(a.ll(o),{radius:a.ref(o)?9:5,color:a.ref(o)?'#0e1c15':'#fff',weight:a.ref(o)?2:1,fillColor:a.col(o),fillOpacity:.95}).bindPopup(`<div class="pop">${a.pop(o)}</div>`);m.addTo(layer);marks[i]=m});
+ $('kpis').innerHTML=a.kpis(vis.map(x=>x[0])).map(([b,t])=>`<div class="kpi"><b>${typeof b==='number'?b.toLocaleString('bg'):b}</b><span>${t}</span></div>`).join('');
+ const cmp=a.sorts.find(s=>s[0]===sortBy)[2];
+ const L2=[...vis].sort((x,y)=>(a.ref(y[0])-a.ref(x[0]))||cmp(x[0],y[0])).slice(0,300);
+ $('list').innerHTML=L2.map(([o,i])=>{const[bt,bc]=a.badge(o);return `<li tabindex="0" data-i="${i}"><span class="t">${esc(a.name(o))}<small>${esc(a.town(o))}</small></span><span class="badge" style="background:${a.ref(o)?'#e0a80b':bc}">${esc(bt)}</span></li>`}).join('')+(vis.length>300?`<li><span class="t"><small>Показани 300 от ${vis.length}. Стесни търсенето.</small></span></li>`:'')}
+function go(i){const a=A(),o=a.rows()[i];map.setView(a.ll(o),16);if(marks[i])marks[i].openPopup()}
+$('list').addEventListener('click',e=>{const li=e.target.closest('li[data-i]');if(li)go(+li.dataset.i)});
+$('list').addEventListener('keydown',e=>{if(e.key==='Enter'){const li=e.target.closest('li[data-i]');if(li)go(+li.dataset.i)}});
+$('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
+$('sort').addEventListener('change',e=>{sortBy=e.target.value;render()});
+for(const t of document.querySelectorAll('.tab'))t.onclick=()=>setView(t.dataset.v);
+fetch('data.json').then(r=>r.json()).then(d=>{D=d;const h=location.hash.slice(1);setView(V[h]?h:'turf')});
+}
+</script></body></html>
