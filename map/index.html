@@ -39,14 +39,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{o
 @media(max-width:860px){main{grid-template-columns:minmax(0,1fr);grid-template-rows:60vh auto}aside{border-left:0;border-top:1px solid var(--line);overflow:visible}ul{max-height:50vh}}
 </style></head><body>
 <header><b>Ω Creamino™ · Карта на спортните терени</b><a href="https://pointsurface.com/creamino/">Point Surface</a>
-<div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="water" aria-selected="false">Открити води</button></div></header>
+<div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="water" aria-selected="false">Открити води</button><button class="tab" data-v="active" aria-selected="false">Активни места</button></div></header>
 <main><div id="map"></div>
 <aside><h1 id="h1"></h1><p class="sub" id="sub"></p>
 <div class="kpis" id="kpis"></div><div class="chips" id="chips"></div><div id="extra"></div>
 <input type="search" id="q" placeholder="Търси град или име…" aria-label="Търсене">
 <select id="sort" aria-label="Подреждане"></select>
 <ul id="list"></ul></aside></main>
-<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Открити води: водно огледало и хлорофилен индекс (NDCI), не е анализ на водата. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</footer>
+<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Активни места: паркове и площадки от OpenStreetMap, достъпът не е проверен. Открити води: водно огледало и хлорофилен индекс (NDCI), не е анализ на водата. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 {
@@ -84,6 +84,7 @@ return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:b
 const WT={reservoir:'Язовир',lake:'Езеро',water:'Водоем',pond:'Езерце',basin:'Басейн',lagoon:'Лагуна'};
 const acol=v=>v==null?'#9aa59e':v<0?'#1f6fb2':v<0.1?'#36a3a0':v<0.2?'#c9a227':'#5e8c1f';
 const alg=v=>v==null?['облачно','Няма чиста снимка.']:v<0?['ниско','Бистра вода по сателита.']:v<0.1?['умерено','Леко зеленикава вода.']:v<0.2?['повишено','Вероятно повече водорасли или мътна вода.']:['високо','Вероятен цъфтеж на водорасли или плитко, обрасло място.'];
+let ACT=null;const PT={park:'Парк',village_green:'Градинка',recreation_ground:'Зона за отдих',dog_park:'Парк за кучета'};const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);const eqn=o=>o[3]==='court'?0:o[6]+o[7]+o[8]+(o[9]?1:0);
 const GN={A:'A · горна четвърт',B:'B · над средното',C:'C · под средното',D:'D · долна четвърт',L:'Ниска растителност',X:'Изкуствена настилка',S:'Твърде малък за сателита',"?":'Няма чиста снимка'};
 const GC={A:'#138a45',B:'#7cbf3c',C:'#e3b52b',D:'#d0602a'};
 const gcol=g=>GC[g]||'#9aa59e';
@@ -113,6 +114,15 @@ const V={
   legend:'<b>Сняг</b><br><i class="dot" style="background:#2a8fd6"></i>≥50% <i class="dot" style="background:#8cc3ea"></i>10–50%<br><i class="dot" style="background:#b9a07a"></i>&lt;10% <i class="dot" style="background:#9aa59e"></i>облачно',
   kpis:v=>[[v.length,'писти'],[v.filter(o=>o[6]>=50).length,'със сняг ≥50%'],[Math.round(v.reduce((a,o)=>a+o[5],0)/1000)+' km','дължина']],
   pop:o=>`<h3>${esc(o[2]||'Ски писта')}</h3><div class="st">${o[4]==='nordic'?'Ски бягане':'Спускане'}${o[3]?' · '+esc(o[3]):''} · ${esc(o[8])} · ${(o[5]/1000).toFixed(1)} km</div><div style="margin-top:5px"><span class="badge" style="background:${scol(o[6])}">${o[6]!=null?Math.round(o[6])+'% сняг':'облачно'}</span> <span class="st">снимка ${esc(o[7])||'–'}</span></div>`},
+ active:{rows:()=>ACT||[],ll:o=>[o[0],o[1]],name:o=>o[2]||(o[3]==='court'?cap(o[4]):PT[o[3]]),town:o=>o[3]==='court'?o[5]+' · '+o[4]:o[5]+' · '+o[4].toLocaleString('bg')+' ha',col:o=>o[3]==='court'?'#7b4fd6':o[3]==='dog_park'?'#b0702a':'#2a9d57',ref:()=>false,
+  vis:o=>o[3]==='court'?on.court:o[3]==='dog_park'?on.dog:on.park,badge:o=>o[3]==='court'?['площ.','#7b4fd6']:o[3]==='dog_park'?['кучета','#b0702a']:[o[4]>=10?Math.round(o[4])+' ha':o[4].toFixed(1)+' ha','#2a9d57'],
+  sorts:[['area','Най-големи паркове',(a,b)=>(b[3]==='court'?-1:b[4])-(a[3]==='court'?-1:a[4])],['eq','С най-много съоръжения',(a,b)=>eqn(b)-eqn(a)],['town','По населено място',(a,b)=>a[5].localeCompare(b[5],'bg')]],
+  chips:[['park','Паркове'],['court','Площадки'],['dog','Кучешки паркове']],
+  h1:n=>`${n.toLocaleString('bg')} места за спорт без кола`,sub:()=>'Паркове над 1 ha, открити площадки и паркове за кучета от OpenStreetMap.',
+  legend:'<i class="dot" style="background:#2a9d57"></i>парк <i class="dot" style="background:#7b4fd6"></i>площадка<br><i class="dot" style="background:#b0702a"></i>парк за кучета',
+  kpis:v=>[[v.filter(o=>o[3]!=='court'&&o[3]!=='dog_park').length,'парка'],[v.filter(o=>o[3]==='court').length,'площадки'],[v.filter(o=>o[3]==='dog_park').length,'за кучета']],
+  pop:o=>o[3]==='court'?`<h3>${esc(o[2]||cap(o[4]))}</h3><div class="st">Площадка · ${esc(o[4])} · ${esc(o[5])}</div><div class="st" style="margin-top:4px;font-size:11px">Достъпът може да е платен или ограничен – проверете на място.</div>`
+   :`<h3>${esc(o[2]||PT[o[3]])}</h3><div class="st">${PT[o[3]]} · ${esc(o[5])} · ${o[4].toLocaleString('bg')} ha</div><div style="margin-top:5px;font-size:13px">${[o[6]?o[6]+' спортни площадки':'',o[7]?o[7]+' детски площадки':'',o[8]?o[8]+' чешми':'',o[9]?'писта за бягане':''].filter(Boolean).join(' · ')||'<span class="st">Няма отбелязани съоръжения в OpenStreetMap.</span>'}</div>`},
  water:{rows:()=>D.water||[],ll:o=>[o[0],o[1]],name:o=>o[2]||WT[o[3]]||'Водоем',town:o=>o[5]+' · '+o[4].toLocaleString('bg')+' ha',col:o=>acol(o[8]),ref:()=>false,vis:o=>(on.big&&o[4]>=100)||(on.small&&o[4]<100),
   badge:o=>[alg(o[8])[0],acol(o[8])],
   sorts:[['area','По площ',(a,b)=>b[4]-a[4]],['alg','Най-чисти първо',(a,b)=>(a[8]??9)-(b[8]??9)],['algd','Най-много водорасли',(a,b)=>(b[8]??-9)-(a[8]??-9)],['town','По населено място',(a,b)=>a[5].localeCompare(b[5],'bg')]],chips:[['big','над 100 ha'],['small','10–100 ha']],
@@ -122,8 +132,8 @@ const V={
   pop:o=>`<h3>${esc(o[2]||WT[o[3]]||'Водоем')}</h3><div class="st">${WT[o[3]]||'Водоем'} · ${esc(o[5])} · ${o[4].toLocaleString('bg')} ha</div><div style="margin-top:5px"><span class="badge" style="background:${acol(o[8])}">Водорасли: ${alg(o[8])[0]}</span>${o[8]!=null?' <span class="st">NDCI '+o[8]+'</span>':''}</div><div class="st" style="margin-top:4px">Водно огледало: ${o[6]!=null?Math.round(o[6])+'% от контура':'–'}${o[7]>0?' · лед '+Math.round(o[7])+'%':''} · снимка ${esc(o[9])||'–'}</div><div class="st" style="margin-top:4px;font-size:11px">${alg(o[8])[1]} Сателитен индикатор, не е анализ на водата. Къпане – само на обозначени места; качеството на водата се следи от РЗИ.</div>`}
 };
 const A=()=>V[view];
-function setView(v){view=v;for(const t of document.querySelectorAll('.tab'))t.setAttribute('aria-selected',t.dataset.v===v);
- on={F:1,S:1,G:1,down:1,nord:1,big:1,small:1};refOnly=false;sortBy=A().sorts[0][0];
+function setView(v){if(v==='active'&&!ACT){fetch('active.json').then(r=>r.json()).then(j=>{ACT=[...j.parks,...j.courts.map(c=>[c[0],c[1],c[3],'court',c[2],c[4]])];setView('active')});return}view=v;for(const t of document.querySelectorAll('.tab'))t.setAttribute('aria-selected',t.dataset.v===v);
+ on={F:1,S:1,G:1,down:1,nord:1,big:1,small:1,park:1,court:1,dog:1};refOnly=false;sortBy=A().sorts[0][0];
  $('sort').innerHTML=A().sorts.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
  $('chips').innerHTML=A().chips.map(([k,l])=>`<button class="chip" data-c="${k}" aria-pressed="${k!=='R'}">${l}</button>`).join('');
  for(const b of $('chips').children)b.onclick=()=>{const c=b.dataset.c;if(c==='R'){refOnly=!refOnly;b.setAttribute('aria-pressed',refOnly)}else{on[c]=!on[c];b.setAttribute('aria-pressed',!!on[c])}render()};
