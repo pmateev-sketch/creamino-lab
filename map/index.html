@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Creamino™ Карта на спортните терени в България</title>
-<meta name="description" content="Тревни терени, ски писти и лека атлетика в България с геолокация и сателитен индекс на състоянието (Sentinel-2). Point Surface · Creamino™.">
+<meta name="description" content="Тревни терени, ски писти и открити води в България с геолокация и сателитен индекс на състоянието (Sentinel-2). Point Surface · Creamino™.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -39,14 +39,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{o
 @media(max-width:860px){main{grid-template-columns:minmax(0,1fr);grid-template-rows:60vh auto}aside{border-left:0;border-top:1px solid var(--line);overflow:visible}ul{max-height:50vh}}
 </style></head><body>
 <header><b>Ω Creamino™ · Карта на спортните терени</b><a href="https://pointsurface.com/creamino/">Point Surface</a>
-<div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="track" aria-selected="false">Лека атлетика</button></div></header>
+<div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="water" aria-selected="false">Открити води</button></div></header>
 <main><div id="map"></div>
 <aside><h1 id="h1"></h1><p class="sub" id="sub"></p>
 <div class="kpis" id="kpis"></div><div class="chips" id="chips"></div><div id="extra"></div>
 <input type="search" id="q" placeholder="Търси град или име…" aria-label="Търсене">
 <select id="sort" aria-label="Подреждане"></select>
 <ul id="list"></ul></aside></main>
-<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</footer>
+<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Открити води: водно огледало и хлорофилен индекс (NDCI), не е анализ на водата. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 {
@@ -81,6 +81,9 @@ const ln=(i,c)=>`<path d="${R.map((o,j)=>(j?'L':'M')+x(o[0]).toFixed(1)+' '+yy(o
 let g='';for(const v of[0,50,100])g+=`<line x1="${l}" x2="${W-r}" y1="${yy(v)}" y2="${yy(v)}" stroke="rgba(128,140,140,.25)"/><text x="${l-4}" y="${yy(v)+3}" font-size="8" text-anchor="end" fill="#7d8f8a">${v}</text>`;
 for(const y of[2017,2020,2023,2026])g+=`<text x="${x(y)}" y="${H-4}" font-size="8" text-anchor="${y>2025?"end":y<2018?"start":"middle"}" fill="#7d8f8a">${y}</text>`;
 return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:block;margin-top:4px" role="img" aria-label="Качество и прогнозен риск по години">${g}${ln(1,'#2a9d57')}${ln(2,'#e0703a')}</svg><div style="font-size:11px;line-height:1.35"><b style="color:#2a9d57">●</b> качество (лятна растителност) <b style="color:#e0703a">●</b> прогнозен сърфейс риск<br><span style="color:#7d8f8a">Сателитен индикатор, 0–100 спрямо всички терени в БГ за годината (юни–август). Не е измерен SRS и не е оценка по FIFA.</span></div>`}
+const WT={reservoir:'Язовир',lake:'Езеро',water:'Водоем',pond:'Езерце',basin:'Басейн',lagoon:'Лагуна'};
+const acol=v=>v==null?'#9aa59e':v<0?'#1f6fb2':v<0.1?'#36a3a0':v<0.2?'#c9a227':'#5e8c1f';
+const alg=v=>v==null?['облачно','Няма чиста снимка.']:v<0?['ниско','Бистра вода по сателита.']:v<0.1?['умерено','Леко зеленикава вода.']:v<0.2?['повишено','Вероятно повече водорасли или мътна вода.']:['високо','Вероятен цъфтеж на водорасли или плитко, обрасло място.'];
 const GN={A:'A · горна четвърт',B:'B · над средното',C:'C · под средното',D:'D · долна четвърт',L:'Ниска растителност',X:'Изкуствена настилка',S:'Твърде малък за сателита',"?":'Няма чиста снимка'};
 const GC={A:'#138a45',B:'#7cbf3c',C:'#e3b52b',D:'#d0602a'};
 const gcol=g=>GC[g]||'#9aa59e';
@@ -110,15 +113,17 @@ const V={
   legend:'<b>Сняг</b><br><i class="dot" style="background:#2a8fd6"></i>≥50% <i class="dot" style="background:#8cc3ea"></i>10–50%<br><i class="dot" style="background:#b9a07a"></i>&lt;10% <i class="dot" style="background:#9aa59e"></i>облачно',
   kpis:v=>[[v.length,'писти'],[v.filter(o=>o[6]>=50).length,'със сняг ≥50%'],[Math.round(v.reduce((a,o)=>a+o[5],0)/1000)+' km','дължина']],
   pop:o=>`<h3>${esc(o[2]||'Ски писта')}</h3><div class="st">${o[4]==='nordic'?'Ски бягане':'Спускане'}${o[3]?' · '+esc(o[3]):''} · ${esc(o[8])} · ${(o[5]/1000).toFixed(1)} km</div><div style="margin-top:5px"><span class="badge" style="background:${scol(o[6])}">${o[6]!=null?Math.round(o[6])+'% сняг':'облачно'}</span> <span class="st">снимка ${esc(o[7])||'–'}</span></div>`},
- track:{rows:()=>D.track,ll:o=>[o[0],o[1]],name:o=>o[2]||'Лекоатлетическа писта',town:o=>o[3],col:()=>'#c2412d',ref:()=>false,vis:()=>true,badge:o=>[(o[4]/1e4).toFixed(2)+' ha','#c2412d'],
-  sorts:[['town','По град',(a,b)=>a[3].localeCompare(b[3],'bg')],['area','По площ',(a,b)=>b[4]-a[4]]],chips:[],
-  h1:n=>`${n} съоръжения за лека атлетика`,sub:()=>'Синтетичните писти не се оценяват от сателита.',legend:'<i class="dot" style="background:#c2412d"></i>писта / сектор',
-  kpis:v=>[[v.length,'обекта'],[new Set(v.map(o=>o[3])).size,'населени места'],['–','сател. оценка']],
-  pop:o=>`<h3>${esc(o[2]||'Лекоатлетическа писта')}</h3><div class="st">${esc(o[3])} · ${o[4].toLocaleString('bg')} m²</div>`}
+ water:{rows:()=>D.water||[],ll:o=>[o[0],o[1]],name:o=>o[2]||WT[o[3]]||'Водоем',town:o=>o[5]+' · '+o[4].toLocaleString('bg')+' ha',col:o=>acol(o[8]),ref:()=>false,vis:o=>(on.big&&o[4]>=100)||(on.small&&o[4]<100),
+  badge:o=>[alg(o[8])[0],acol(o[8])],
+  sorts:[['area','По площ',(a,b)=>b[4]-a[4]],['alg','Най-чисти първо',(a,b)=>(a[8]??9)-(b[8]??9)],['algd','Най-много водорасли',(a,b)=>(b[8]??-9)-(a[8]??-9)],['town','По населено място',(a,b)=>a[5].localeCompare(b[5],'bg')]],chips:[['big','над 100 ha'],['small','10–100 ha']],
+  h1:n=>`${n} езера и язовира: вода и водорасли`,sub:()=>`Последна безоблачна снимка Sentinel-2, към ${D.asof}.`,
+  legend:'<b>Водорасли (хлорофил)</b><br><i class="dot" style="background:#1f6fb2"></i>ниско <i class="dot" style="background:#36a3a0"></i>умерено<br><i class="dot" style="background:#c9a227"></i>повишено <i class="dot" style="background:#5e8c1f"></i>високо <i class="dot" style="background:#9aa59e"></i>облачно',
+  kpis:v=>[[v.length,'водоема'],[v.filter(o=>o[8]!=null&&o[8]<0).length,'с ниско'],[v.filter(o=>o[6]!=null&&o[6]<70).length,'под 70% вода']],
+  pop:o=>`<h3>${esc(o[2]||WT[o[3]]||'Водоем')}</h3><div class="st">${WT[o[3]]||'Водоем'} · ${esc(o[5])} · ${o[4].toLocaleString('bg')} ha</div><div style="margin-top:5px"><span class="badge" style="background:${acol(o[8])}">Водорасли: ${alg(o[8])[0]}</span>${o[8]!=null?' <span class="st">NDCI '+o[8]+'</span>':''}</div><div class="st" style="margin-top:4px">Водно огледало: ${o[6]!=null?Math.round(o[6])+'% от контура':'–'}${o[7]>0?' · лед '+Math.round(o[7])+'%':''} · снимка ${esc(o[9])||'–'}</div><div class="st" style="margin-top:4px;font-size:11px">${alg(o[8])[1]} Сателитен индикатор, не е анализ на водата. Къпане – само на обозначени места; качеството на водата се следи от РЗИ.</div>`}
 };
 const A=()=>V[view];
 function setView(v){view=v;for(const t of document.querySelectorAll('.tab'))t.setAttribute('aria-selected',t.dataset.v===v);
- on={F:1,S:1,G:1,down:1,nord:1};refOnly=false;sortBy=A().sorts[0][0];
+ on={F:1,S:1,G:1,down:1,nord:1,big:1,small:1};refOnly=false;sortBy=A().sorts[0][0];
  $('sort').innerHTML=A().sorts.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
  $('chips').innerHTML=A().chips.map(([k,l])=>`<button class="chip" data-c="${k}" aria-pressed="${k!=='R'}">${l}</button>`).join('');
  for(const b of $('chips').children)b.onclick=()=>{const c=b.dataset.c;if(c==='R'){refOnly=!refOnly;b.setAttribute('aria-pressed',refOnly)}else{on[c]=!on[c];b.setAttribute('aria-pressed',!!on[c])}render()};
