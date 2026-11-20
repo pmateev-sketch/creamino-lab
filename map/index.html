@@ -29,6 +29,7 @@ ul{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border-top:1px solid 
 li{padding:7px 2px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:8px;align-items:center}
 li:hover{background:var(--bg)}li .t{flex:1}li small{display:block;color:var(--mute);font-size:12px}
 .badge{min-width:38px;text-align:center;font-weight:800;border-radius:7px;padding:1px 6px;color:#fff;font-size:13px;white-space:nowrap}
+.rs{max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:6px}.rc{border:1px solid var(--line);border-radius:10px;padding:7px 9px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit;width:100%}.rc:hover{background:var(--bg)}.rc .h{display:flex;justify-content:space-between;gap:8px;align-items:center}.rc small{color:var(--mute);font-size:12px;display:block}.note{font-size:11px;color:var(--mute);margin:2px 0 0}
 .legend{background:#fff;padding:6px 8px;border-radius:8px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px #0003}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .pop h3{margin:0 0 3px;font-size:15px}.pop .st{color:var(--mute);font-size:12px}
@@ -41,16 +42,40 @@ button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{o
 <div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="track" aria-selected="false">Лека атлетика</button></div></header>
 <main><div id="map"></div>
 <aside><h1 id="h1"></h1><p class="sub" id="sub"></p>
-<div class="kpis" id="kpis"></div><div class="chips" id="chips"></div>
+<div class="kpis" id="kpis"></div><div class="chips" id="chips"></div><div id="extra"></div>
 <input type="search" id="q" placeholder="Търси град или име…" aria-label="Търсене">
 <select id="sort" aria-label="Подреждане"></select>
 <ul id="list"></ul></aside></main>
-<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Сателитна основа: Esri World Imagery.</footer>
+<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 {
 const TN={F:'Футболен терен',S:'Стадион',G:'Голф игрище'};
-let H={};
+let H={},LGT=null,LGO=new Map(),lg='',RS=null,WX=null;
+const LGN={1:'Първа лига',2:'Втора лига'};
+function attachLeagues(){if(!LGT||!D)return;LGO=new Map();for(const t of LGT.teams){let b=null,bd=1e9;for(const o of D.turf){const d=(o[1]-t[4])**2+((o[2]-t[5])*.74)**2;if(d<bd){bd=d;b=o}}if(Math.sqrt(bd)*111000<250){if(!LGO.has(b))LGO.set(b,[]);LGO.get(b).push(t)}}}
+const RN={'Стойките':'Пампорово','Проглед':'Пампорово','Говедарци':'Мальовица','Район Витоша':'Витоша (Алеко)','Чепеларе':'Чепеларе (Мечи чал)','м. Шумако':'Шумако (Троянски Балкан)'};
+function buildResorts(){const P=D.piste,n=P.length,par=P.map((_,i)=>i),f=i=>par[i]===i?i:(par[i]=f(par[i]));
+ for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){if(Math.hypot(P[i][0]-P[j][0],(P[i][1]-P[j][1])*.74)*111<3)par[f(i)]=f(j)}
+ const G={};P.forEach((o,i)=>{(G[f(i)]=G[f(i)]||[]).push(o)});
+ RS=Object.values(G).map(L=>{const w=L.reduce((a,o)=>a+o[5],0),tc={};L.forEach(o=>tc[o[8]]=(tc[o[8]]||0)+o[5]);const town=Object.entries(tc).sort((a,b)=>b[1]-a[1])[0][0];
+  const sn=L.filter(o=>o[6]!=null),sw=sn.reduce((a,o)=>a+o[5],0);
+  return{name:RN[town]||town,lat:L.reduce((a,o)=>a+o[0]*o[5],0)/w,lon:L.reduce((a,o)=>a+o[1]*o[5],0)/w,km:w/1000,n:L.length,down:L.filter(o=>o[4]==='downhill').length,snow:sw?sn.reduce((a,o)=>a+o[6]*o[5],0)/sw:null,date:L.map(o=>o[7]).filter(Boolean).sort().pop()||''}}).filter(r=>r.km>=2||r.n>=3).sort((a,b)=>b.km-a.km);
+ const u='https://api.open-meteo.com/v1/forecast?latitude='+RS.map(r=>r.lat.toFixed(3)).join(',')+'&longitude='+RS.map(r=>r.lon.toFixed(3)).join(',')+'&current=temperature_2m,snow_depth,wind_speed_10m&daily=snowfall_sum&past_days=3&forecast_days=4&timezone=Europe%2FSofia';
+ fetch(u).then(r=>r.json()).then(j=>{WX=Array.isArray(j)?j:[j];if(view==='piste')extra()}).catch(()=>{WX=[];if(view==='piste')extra()})}
+function cond(r,w){const d=w&&w.current&&w.current.snow_depth!=null?w.current.snow_depth*100:null,s=r.snow;
+ if((d!=null&&d>=40)||(s!=null&&s>=60&&(d==null||d>=20)))return['Добри','#138a45'];
+ if((d!=null&&d>=15)||(s!=null&&s>=30))return['Частични','#e3b52b'];return['Няма сняг за ски','#b9a07a']}
+function extra(){const E=$('extra');
+ if(view==='turf'){const c={1:0,2:0};for(const t of(LGT?LGT.teams:[]))c[t[0]]++;
+  E.innerHTML=LGT?`<select id="lg" aria-label="Лига"><option value="">Всички терени</option><option value="1">Първа лига ${LGT.season} · ${new Set(LGT.teams.filter(t=>t[0]==1).map(t=>t[1])).size} отбора</option><option value="2">Втора лига ${LGT.season} · ${new Set(LGT.teams.filter(t=>t[0]==2).map(t=>t[1])).size} отбора</option></select>${lg?'<p class="note">Домакинските стадиони по Wikipedia, проверено 20.11.2026. Лудогорец II не е отбелязан – базата му не е потвърдена.</p>':''}`:'';
+  const S=$('lg');if(S){S.value=lg;S.onchange=()=>{lg=S.value;extra();render();const b=[];D.turf.forEach(o=>{if(V.turf.vis(o))b.push([o[1],o[2]])});if(lg&&b.length)map.fitBounds(b,{padding:[30,30],maxZoom:12})}}}
+ else if(view==='piste'){if(!RS)buildResorts();
+  E.innerHTML=`<div class="rs">${RS.map((r,i)=>{const w=WX&&WX[i],[ct,cc]=cond(r,w),dd=w&&w.daily?w.daily.snowfall_sum:null,past=dd?dd.slice(0,3).reduce((a,b)=>a+(b||0),0):null,next=dd?dd.slice(4,7).reduce((a,b)=>a+(b||0),0):null;
+   return`<button class="rc" data-r="${i}"><span class="h"><b>${esc(r.name)}</b><span class="badge" style="background:${cc}">${ct}</span></span><small>${r.n} писти · ${r.km.toFixed(1)} km · сателит: ${r.snow!=null?Math.round(r.snow)+'% сняг':'облачно'}${r.date?' ('+r.date.slice(8,10)+'.'+r.date.slice(5,7)+')':''}</small>${w&&w.current?`<small>Сега ${Math.round(w.current.temperature_2m)} °C · вятър ${Math.round(w.current.wind_speed_10m)} km/h · снежна покривка ≈ ${Math.round((w.current.snow_depth||0)*100)} cm</small><small>Нов сняг: последните 3 дни ${Math.round(past)} cm · следващите 3 дни ${Math.round(next)} cm</small>`:(WX?'<small>Няма данни за времето.</small>':'<small>Зареждам времето…</small>')}</button>`}).join('')}</div><p class="note">Условията са оценка от сателита и от метеорологичен модел (Open-Meteo) за средата на курорта. Не отчитат изкуствения сняг и обработката на пистите – проверете курорта преди пътуване.</p>`;
+  for(const b of E.querySelectorAll('.rc'))b.onclick=()=>{const r=RS[+b.dataset.r];map.setView([r.lat,r.lon],13)}}
+ else E.innerHTML=''}
+
 function histSVG(R){if(!R||R.length<2)return'';const W=250,H=86,l=22,r=6,t=8,b=16,x=y=>l+(y-2017)/9*(W-l-r),yy=v=>t+(100-v)/100*(H-t-b);
 const ln=(i,c)=>`<path d="${R.map((o,j)=>(j?'L':'M')+x(o[0]).toFixed(1)+' '+yy(o[i]).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="2"/>`+R.map(o=>`<circle cx="${x(o[0]).toFixed(1)}" cy="${yy(o[i]).toFixed(1)}" r="2.2" fill="${c}"><title>${o[0]}: ${o[i]}</title></circle>`).join('');
 let g='';for(const v of[0,50,100])g+=`<line x1="${l}" x2="${W-r}" y1="${yy(v)}" y2="${yy(v)}" stroke="rgba(128,140,140,.25)"/><text x="${l-4}" y="${yy(v)+3}" font-size="8" text-anchor="end" fill="#7d8f8a">${v}</text>`;
@@ -70,18 +95,18 @@ const layer=L.layerGroup().addTo(map);
 const legend=L.control({position:'bottomleft'});legend.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.id='legend';return d};legend.addTo(map);
 let D=null,view='turf',q='',on={},refOnly=false,sortBy='',marks=[];
 const V={
- turf:{rows:()=>D.turf,ll:o=>[o[1],o[2]],name:o=>o[4]||TN[o[0]],town:o=>o[5],col:o=>o[6]?'#e0a80b':gcol(o[8]),ref:o=>!!o[6],vis:o=>on[o[0]]&&(!refOnly||o[6]),
+ turf:{rows:()=>D.turf,ll:o=>[o[1],o[2]],name:o=>{const t=LGO.get(o);return lg&&t?t.filter(x=>x[0]==lg).map(x=>x[1]).join(' / ')+' · '+t[0][3]:(o[4]||TN[o[0]])},town:o=>{const t=LGO.get(o);return t?o[5]+' · '+[...new Set(t.map(x=>LGN[x[0]]))].join(', '):o[5]},col:o=>o[6]?'#e0a80b':gcol(o[8]),ref:o=>!!o[6],vis:o=>on[o[0]]&&(!refOnly||o[6])&&(!lg||(LGO.get(o)||[]).some(x=>x[0]==lg)),
   badge:o=>o[9]!=null?[o[8]+' '+o[9],gcol(o[8])]:[o[8]==='X'?'изк.':'–','#9aa59e'],
   sorts:[['score','По оценка ↓',(a,b)=>(b[9]??-1)-(a[9]??-1)],['scoreAsc','По оценка ↑',(a,b)=>(a[9]??999)-(b[9]??999)],['town','По град',(a,b)=>a[5].localeCompare(b[5],'bg')]],
   chips:[['F','Футболни'],['S','Стадиони'],['G','Голф'],['R','Point Surface']],
   h1:n=>`${n.toLocaleString('bg')} тревни терена, оценени от сателита`,sub:()=>`Sentinel-2, данни към ${D.asof}. Сравнителна оценка A–D.`,
   legend:'<b>Оценка</b><br><i class="dot" style="background:#138a45"></i>A <i class="dot" style="background:#7cbf3c"></i>B <i class="dot" style="background:#e3b52b"></i>C <i class="dot" style="background:#d0602a"></i>D<br><i class="dot" style="background:#9aa59e"></i>без оценка <i class="dot" style="background:#e0a80b"></i>Point Surface',
   kpis:v=>{const c={A:0,D:0};v.forEach(o=>{if(o[8] in c)c[o[8]]++});return[[v.length,'терена'],[c.A,'с A'],[c.D,'с D']]},
-  pop:o=>`<h3>${esc(o[4]||TN[o[0]])}</h3><div class="st">${TN[o[0]]} · ${esc(o[5])} · ${o[3].toLocaleString('bg')} m²</div>${o[6]?`<span class="tag">Point Surface: ${esc(o[6])}</span>`:''}<div style="margin-top:5px"><span class="badge" style="background:${gcol(o[8])}">${o[8]}${o[9]!=null?' · '+o[9]+'/100':''}</span> ${GN[o[8]]||''}</div><div class="st">NDVI ${o[10]??'–'} · NDMI ${o[11]??'–'} · снимка ${esc(o[12])||'–'}</div>${H[o[1]+','+o[2]]?'<div style="margin-top:6px;font-weight:700;font-size:12px">Промяна през годините</div>'+histSVG(H[o[1]+','+o[2]]):''}`},
+  pop:o=>`<h3>${esc(o[4]||TN[o[0]])}</h3><div class="st">${TN[o[0]]} · ${esc(o[5])} · ${o[3].toLocaleString('bg')} m²</div>${(LGO.get(o)||[]).map(x=>`<span class="tag" style="background:#0b1a14;color:#fff">${LGN[x[0]]}: ${esc(x[1])}</span> `).join('')}${o[6]?`<span class="tag">Point Surface: ${esc(o[6])}</span>`:''}<div style="margin-top:5px"><span class="badge" style="background:${gcol(o[8])}">${o[8]}${o[9]!=null?' · '+o[9]+'/100':''}</span> ${GN[o[8]]||''}</div><div class="st">NDVI ${o[10]??'–'} · NDMI ${o[11]??'–'} · снимка ${esc(o[12])||'–'}</div>${H[o[1]+','+o[2]]?'<div style="margin-top:6px;font-weight:700;font-size:12px">Промяна през годините</div>'+histSVG(H[o[1]+','+o[2]]):''}`},
  piste:{rows:()=>D.piste,ll:o=>[o[0],o[1]],name:o=>o[2]||(o[4]==='nordic'?'Писта за ски бягане':'Ски писта'),town:o=>o[8],col:o=>scol(o[6]),ref:()=>false,vis:o=>(on.down&&o[4]==='downhill')||(on.nord&&o[4]==='nordic'),
   badge:o=>[o[6]!=null?Math.round(o[6])+'%':'–',scol(o[6])],
   sorts:[['snow','По сняг ↓',(a,b)=>(b[6]??-1)-(a[6]??-1)],['town','По курорт',(a,b)=>a[8].localeCompare(b[8],'bg')]],chips:[['down','Спускане'],['nord','Ски бягане']],
-  h1:n=>`${n} ски писти: къде има сняг`,sub:()=>`Последна безоблачна снимка Sentinel-2, към ${D.asof}.`,
+  h1:n=>`${n} ски писти: сняг и условия`,sub:()=>`Последна безоблачна снимка Sentinel-2, към ${D.asof}.`,
   legend:'<b>Сняг</b><br><i class="dot" style="background:#2a8fd6"></i>≥50% <i class="dot" style="background:#8cc3ea"></i>10–50%<br><i class="dot" style="background:#b9a07a"></i>&lt;10% <i class="dot" style="background:#9aa59e"></i>облачно',
   kpis:v=>[[v.length,'писти'],[v.filter(o=>o[6]>=50).length,'със сняг ≥50%'],[Math.round(v.reduce((a,o)=>a+o[5],0)/1000)+' km','дължина']],
   pop:o=>`<h3>${esc(o[2]||'Ски писта')}</h3><div class="st">${o[4]==='nordic'?'Ски бягане':'Спускане'}${o[3]?' · '+esc(o[3]):''} · ${esc(o[8])} · ${(o[5]/1000).toFixed(1)} km</div><div style="margin-top:5px"><span class="badge" style="background:${scol(o[6])}">${o[6]!=null?Math.round(o[6])+'% сняг':'облачно'}</span> <span class="st">снимка ${esc(o[7])||'–'}</span></div>`},
@@ -97,7 +122,7 @@ function setView(v){view=v;for(const t of document.querySelectorAll('.tab'))t.se
  $('sort').innerHTML=A().sorts.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
  $('chips').innerHTML=A().chips.map(([k,l])=>`<button class="chip" data-c="${k}" aria-pressed="${k!=='R'}">${l}</button>`).join('');
  for(const b of $('chips').children)b.onclick=()=>{const c=b.dataset.c;if(c==='R'){refOnly=!refOnly;b.setAttribute('aria-pressed',refOnly)}else{on[c]=!on[c];b.setAttribute('aria-pressed',!!on[c])}render()};
- $('h1').textContent=A().h1(A().rows().length);$('sub').textContent=A().sub();$('legend').innerHTML=A().legend;render()}
+ extra();$('h1').textContent=A().h1(A().rows().length);$('sub').textContent=A().sub();$('legend').innerHTML=A().legend;render()}
 function render(){const a=A(),R=a.rows();
  const vis=R.map((o,i)=>[o,i]).filter(([o])=>a.vis(o)&&(!q||(a.name(o)+' '+a.town(o)).toLowerCase().includes(q)));
  layer.clearLayers();marks=[];
@@ -112,7 +137,8 @@ $('list').addEventListener('keydown',e=>{if(e.key==='Enter'){const li=e.target.c
 $('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
 $('sort').addEventListener('change',e=>{sortBy=e.target.value;render()});
 for(const t of document.querySelectorAll('.tab'))t.onclick=()=>setView(t.dataset.v);
+fetch('leagues.json').then(r=>r.json()).then(j=>{LGT=j;attachLeagues();if(view==='turf'){extra();render()}}).catch(()=>{});
 fetch('hist.json').then(r=>r.json()).then(h=>{H=h}).catch(()=>{});
-fetch('data.json').then(r=>r.json()).then(d=>{D=d;const h=location.hash.slice(1);setView(V[h]?h:'turf')});
+fetch('data.json').then(r=>r.json()).then(d=>{D=d;attachLeagues();const h=location.hash.slice(1);setView(V[h]?h:'turf')});
 }
 </script></body></html>
