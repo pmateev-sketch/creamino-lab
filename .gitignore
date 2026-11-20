@@ -1,3 +1,8 @@
 # test artefacts
 0*.png
 imp.csv
+m*_*.png
+m_*.png
+ref_only.csv
+report_*.pdf
+results.json
