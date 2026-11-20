@@ -172,7 +172,7 @@
     else if (d.status === STATUS[1]) { b.className = 'banner exp'; b.innerHTML = 'EXPERIMENTAL REFERENCE DATA — USER-PROVIDED, NOT INDEPENDENTLY VALIDATED<br>NOT LIVE STADIUM DATA'; }
     else { b.className = 'banner val'; b.textContent = 'INDEPENDENTLY VALIDATED RESULTS — see provenance log for the validation record'; }
   }
-  function go(view) { state.view = view; render(); window.scrollTo(0, 0); var m = $('#main'); if (m) m.focus({ preventScroll: true }); }
+  function go(view) { state.view = view; try { history.replaceState(null, '', view === 'home' ? location.pathname : '#' + view); } catch (e) {} render(); window.scrollTo(0, 0); var m = $('#main'); if (m) m.focus({ preventScroll: true }); }
   function render() {
     renderShell();
     var fn = { home: vHome, dashboard: vDashboard, explorer: vExplorer, analytics: vAnalytics, validation: vValidation, spatial: vSpatial, srs: vSRS, report: vReport, provenance: vProvenance }[state.view];
@@ -660,6 +660,9 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeModal(); } });
   }
 
-  init(); bindGlobal(); render();
+  init(); bindGlobal();
+  (function () { var hv = location.hash.slice(1); if (VIEWS.some(function (v) { return v[0] === hv; })) state.view = hv; })();
+  render();
+  window.addEventListener('hashchange', function () { var hv = location.hash.slice(1); if (VIEWS.some(function (v) { return v[0] === hv; }) && hv !== state.view) go(hv); });
   window.CreaminoApp = { state: function () { return state; }, go: go, startDemo: startDemo, makeReport: makeReport };
 })();

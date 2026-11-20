@@ -123,6 +123,7 @@ body.app .intro,body.app .below,body.app #tabletDev,body.app #install{display:no
 body.app .demo{font-size:10px;padding:2px 8px;line-height:1.3}body.app .demo br{display:none}
 body.app .stage{display:block;padding:0;min-height:0;background:#071c23}body.app .devices{display:block;--z:1}
 body.app .devices .phone{zoom:1;width:100%;max-width:none;height:calc(100vh - 18px);height:calc(100dvh - 18px);border:0;border-radius:0;box-shadow:none;margin:0}body.app .notch{display:none}body.app .status{display:none}body.app .demo{padding-top:calc(2px + env(safe-area-inset-top))}body.app .tabbar{padding-bottom:env(safe-area-inset-bottom)}body.app .devices .phone{height:calc(100dvh - 18px - env(safe-area-inset-top))}
+body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:none!important}body.tab .stage{display:block;padding:12px;min-height:0}body.tab .devices{display:block;--z:1}body.tab .devices .tablet{display:block!important;zoom:1;margin:0 auto;width:min(100%,1100px);height:calc(100dvh - 60px);max-height:820px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -357,6 +358,7 @@ document.addEventListener('click',e=>{
 });
 let dp=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;$("instBtn").hidden=false});
 $("instBtn").addEventListener("click",async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$("instBtn").hidden=true});
+if(/[?&]device=tablet/.test(location.search)){document.body.classList.add("tab")}
 if(matchMedia("(display-mode: standalone)").matches||navigator.standalone||/[?&]app=1/.test(location.search)){$("install").hidden=true;document.body.classList.add("app");const d=document.querySelector(".demo");if(d)d.innerHTML='Демо · примерни данни · не е медицинско изделие · <a href="../map/" style="color:inherit;font-weight:700">Карта</a>'}
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 render();
