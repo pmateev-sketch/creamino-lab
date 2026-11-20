@@ -2,13 +2,13 @@
 <html lang="bg">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0c2730">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Creamino">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <title>Creamino Me – приложение за спортиста</title>
@@ -122,7 +122,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 body.app .intro,body.app .below,body.app #tabletDev,body.app #install{display:none!important}
 body.app .demo{font-size:10px;padding:2px 8px;line-height:1.3}body.app .demo br{display:none}
 body.app .stage{display:block;padding:0;min-height:0;background:#071c23}body.app .devices{display:block;--z:1}
-body.app .devices .phone{zoom:1;width:100%;max-width:none;height:calc(100vh - 18px);height:calc(100dvh - 18px);border:0;border-radius:0;box-shadow:none;margin:0}body.app .notch{display:none}
+body.app .devices .phone{zoom:1;width:100%;max-width:none;height:calc(100vh - 18px);height:calc(100dvh - 18px);border:0;border-radius:0;box-shadow:none;margin:0}body.app .notch{display:none}body.app .status{display:none}body.app .demo{padding-top:calc(2px + env(safe-area-inset-top))}body.app .tabbar{padding-bottom:env(safe-area-inset-bottom)}body.app .devices .phone{height:calc(100dvh - 18px - env(safe-area-inset-top))}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -192,8 +192,8 @@ const SITES=[
  {id:'nat',n:'Национален стадион „Васил Левски“',city:'София',lon:23.335,lat:42.688,risk:'M',srs:.41,ndmi:.42,gmax:104,vwc:19.6,type:'Национален стадион',creamino:true},
  {id:'nsa',n:'НСА „Васил Левски“ – тренировъчен терен',city:'София',lon:23.37,lat:42.65,risk:'L',srs:.24,ndmi:.47,gmax:91,vwc:24.2,type:'Университетска база',creamino:true},
  {id:'bsr',n:'BlackSeaRama Golf',city:'Балчик',lon:28.2206,lat:43.4118,risk:'L',srs:.21,ndmi:.52,gmax:86,vwc:25.1,type:'Голф игрище',creamino:false},
- {id:'pld',n:'Градски парк – алея за бягане',city:'Пловдив',lon:24.75,lat:42.14,risk:'M',srs:.36,ndmi:.29,gmax:null,vwc:null,type:'Бягане · сателитен индекс',creamino:false},
- {id:'vrn',n:'Морска градина – трасе',city:'Варна',lon:27.93,lat:43.21,risk:'L',srs:.22,ndmi:.38,gmax:null,vwc:null,type:'Бягане · сателитен индекс',creamino:false}];
+ {id:'pld',n:'Гребен канал – алеи за бягане',city:'Пловдив',lon:24.70,lat:42.154,run:1,risk:'M',srs:.36,ndmi:.29,gmax:null,vwc:null,type:'Бягане · парк „Отдих и култура“',creamino:false},
+ {id:'vrn',n:'Морска градина – алеи за бягане',city:'Варна',lon:27.93,lat:43.205,run:1,risk:'L',srs:.22,ndmi:.38,gmax:null,vwc:null,type:'Бягане · парк',creamino:false}];
 const MACHINES=[{n:'CRIO – Стадион „Лазур“, вход Север',lon:27.502,lat:42.531,d:'0.4 км'},{n:'CRIO – Опитно поле, Бургас',lon:27.47,lat:42.50,d:'2.1 км'},{n:'CRIO – НСА, фитнес зала',lon:23.37,lat:42.65,d:''},{n:'CRIO – Берое, съблекални',lon:25.632,lat:42.432,d:''}];
 const riskC={L:'var(--ok)',M:'var(--warn)',H:'var(--crit)'},riskT={L:'нисък',M:'повишен',H:'висок'};
 // граница на България (опростен контур, lon/lat)
@@ -202,7 +202,7 @@ const proj=(lon,lat)=>[ (lon-22.2)/(28.9-22.2)*340+5, (44.35-lat)/(44.35-41.15)*
 /* ---------- screens ---------- */
 const TABS=[['home','Днес','home'],['map','Карта','map'],['mix','Микс','cup'],['body','Тяло','body'],['run','Движение','run']];
 function tabbar(){$('tabbar').innerHTML=TABS.map(t=>`<button data-tab="${t[0]}" aria-current="${tab===t[0]}">${svg(t[2])}<span>${t[1]}</span></button>`).join('');$('tabbar2').innerHTML=TABS.map(t=>`<button data-tab="${t[0]}" aria-current="${tab2===t[0]}">${svg(t[2])}<span>${t[1]}</span></button>`).join('')}
-function header(title,sub){const P=PERSONAS[who];return`<div class="hdr"><div><p class="muted" style="margin:0">${sub}</p><h2>${title}</h2><span class="pill" style="margin-top:5px;background:rgba(63,211,216,.15);color:var(--accent)">${P.mode}</span></div><button class="av" data-tab="profile" aria-label="Профил">${P.init}</button></div>`}
+function header(title,sub,noMode){const P=PERSONAS[who];return`<div class="hdr"><div><p class="muted" style="margin:0">${sub}</p><h2>${title}</h2>${noMode?'':`<span class="pill" style="margin-top:5px;background:rgba(63,211,216,.15);color:var(--accent)">${P.mode}</span>`}</div><button class="av" data-tab="profile" aria-label="Профил">${P.init}</button></div>`}
 function ring(v,c,label){const r=40,C=2*Math.PI*r;return`<div class="ring"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="${r}" stroke="rgba(159,188,193,.18)" stroke-width="9" fill="none"/><circle cx="48" cy="48" r="${r}" stroke="${c}" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray="${C*v/100} ${C}"/></svg><b>${v}</b><small>${label}</small></div>`}
 function histSVG(R){if(!R||R.length<2)return'';const W=250,H=86,l=22,r=6,t=8,b=16,x=y=>l+(y-2017)/9*(W-l-r),yy=v=>t+(100-v)/100*(H-t-b);
 const ln=(i,c)=>`<path d="${R.map((o,j)=>(j?'L':'M')+x(o[0]).toFixed(1)+' '+yy(o[i]).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="2"/>`+R.map(o=>`<circle cx="${x(o[0]).toFixed(1)}" cy="${yy(o[i]).toFixed(1)}" r="2.2" fill="${c}"><title>${o[0]}: ${o[i]}</title></circle>`).join('');
@@ -213,6 +213,12 @@ const HK={nat:'42.68756,23.33525',ber:'42.43283,25.61523',nef:'42.51244,27.47038
 function golfMini(){const o=window.GOLF;if(!o)return'<div class="muted" style="padding:20px 0">Зареждам игрището…</div>';
  return`<svg viewBox="-3 -3 ${o.w+6} ${o.h+6}" style="width:100%;border-radius:12px;display:block;background:#16343c" role="img" aria-label="План на голф игрището"><path d="${o.course}" fill="#3d7a4a"/><path d="${o.driving_range||''}" fill="#4f8e57"/><path d="${o.fairway}" fill="#6fb35f"/><path d="${o.water_hazard}" fill="#3a8fc7"/><path d="${o.bunker}" fill="#e8d7a3"/><path d="${o.green}" fill="#a6ec84" stroke="#fff" stroke-width=".5"/><path d="${o.tee}" fill="#c9efb1"/></svg>
  <div class="row" style="gap:10px;flex-wrap:wrap;font-size:11px;margin-top:6px"><span><b style="color:#a6ec84">■</b> грийн</span><span><b style="color:#6fb35f">■</b> феъруей</span><span><b style="color:#c9efb1">■</b> тий</span><span><b style="color:#e8d7a3">■</b> бункер</span><span><b style="color:#3a8fc7">■</b> вода</span><span class="muted">${o.greens.length} грийна · ≈${Math.round(o.w*o.m_per_px/10)*10} m · © OpenStreetMap</span></div>`}
+const SURF={paved:'асфалт',paving_stones:'плочки',unpaved:'без настилка',gravel:'чакъл',dirt:'пръст',compacted:'уплътнена',sett:'паваж'};
+function runMini(id){const o=window.RUN&&window.RUN[id];if(!o)return'<div class="muted" style="padding:20px 0">Зареждам парка…</div>';
+ const tot=Object.values(o.surf).reduce((a,b)=>a+b,0),sf=Object.entries(o.surf).filter(([k])=>k!=='?').map(([k,v])=>`${SURF[k]||k} ${Math.round(v/tot*100)}%`).join(' · ');
+ return`<svg viewBox="-3 -3 ${o.w+6} ${o.h+6}" style="width:100%;border-radius:12px;display:block;background:#16343c" role="img" aria-label="План на парка с алеите"><path d="${o.park}" fill="#2f6b3f"/><path d="${o.water}" fill="#3a8fc7"/><path d="${o.paths}" fill="none" stroke="#f2c14b" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/></svg>
+ <div class="row" style="gap:10px;flex-wrap:wrap;font-size:11px;margin-top:6px"><span><b style="color:#2f6b3f">■</b> парк</span><span><b style="color:#f2c14b">■</b> алеи</span>${o.water?'<span><b style="color:#3a8fc7">■</b> вода</span>':''}<span class="muted">${sf?'настилка: '+sf+' · ':''}© OpenStreetMap</span></div>`}
+function runGrid(s){const o=window.RUN&&window.RUN[s.id];return`<div class="grid2" style="margin-top:10px"><div><div class="muted">Алеи в парка</div><div class="big">${o?o.km:'—'}<small style="font-size:13px"> km</small></div></div><div><div class="muted">Площ на парка</div><div class="big">${o?o.ha:'—'}<small style="font-size:13px"> ha</small></div></div><div><div class="muted">Сателит NDMI</div><div class="big">${s.ndmi}</div></div><div><div class="muted">Източник</div><div style="font-weight:700;margin-top:6px">Sentinel-2 + OpenStreetMap</div></div></div>`}
 let pmc=0;function pitchMini(hot){const u=++pmc;// малка карта на терена с горещи зони
  return`<svg viewBox="0 0 210 136" style="width:100%;border-radius:12px;display:block"><defs><radialGradient id="h1${u}"><stop offset="0" stop-color="#ef5b5b" stop-opacity=".95"/><stop offset=".55" stop-color="#f2b84b" stop-opacity=".6"/><stop offset="1" stop-color="#f2b84b" stop-opacity="0"/></radialGradient><radialGradient id="h2${u}"><stop offset="0" stop-color="#f2b84b" stop-opacity=".8"/><stop offset="1" stop-color="#f2b84b" stop-opacity="0"/></radialGradient><pattern id="g${u}" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="rgba(255,255,255,.07)"/></pattern></defs>
  <rect width="210" height="136" fill="#2f8a52"/><rect width="210" height="136" fill="url(#g${u})"/>${hot?'<ellipse cx="38" cy="68" rx="34" ry="26" fill="url(#h1'+u+')"/><ellipse cx="128" cy="40" rx="26" ry="18" fill="url(#h2'+u+')"/>':'<ellipse cx="150" cy="90" rx="22" ry="14" fill="url(#h2'+u+')"/>'}
@@ -278,10 +284,10 @@ function mapScreen(){const pts=SITES.map(s=>{const[x,y]=proj(s.lon,s.lat);return
  <div class="list" id="sitelist">${SITES.map(s=>`<button class="li" data-site="${s.id}" style="border:0;text-align:left;width:100%"><span class="ico" style="background:${riskC[s.risk]}22;color:${riskC[s.risk]}">${svg('pin')}</span><div style="flex:1"><b>${s.n}</b><div class="muted">${s.city} · ${s.type}${s.creamino?' · Creamino':' · само сателит'}</div></div><span class="pill" style="--c:${riskC[s.risk]}">${riskT[s.risk]}</span></button>`).join('')}</div>
  <p class="muted" style="margin:0">Терените с Ω имат Wi-Fi сензориране и полеви измервания; останалите – сателитен индекс на влагата (NDMI, Sentinel-2) с по-ниска точност.</p>`}
 function siteCard(id){const s=SITES.find(x=>x.id===id);
- return header(s.n,s.city+' · '+s.type)+`
- <div class="card ${s.risk==='H'?'crit':s.risk==='M'?'alert':''}"><div class="between"><span class="eyebrow">Днес</span><span class="pill" style="--c:${riskC[s.risk]}">SRS ${s.srs.toFixed(2)} · ${riskT[s.risk]}</span></div>${s.id==='bsr'?golfMini():pitchMini(s.risk!=='L')}
- <div class="grid2" style="margin-top:10px"><div><div class="muted">Твърдост</div><div class="big">${s.gmax??'—'}<small style="font-size:13px"> g</small></div></div><div><div class="muted">Влажност</div><div class="big">${s.vwc??'—'}<small style="font-size:13px"> %</small></div></div><div><div class="muted">Сателит NDMI</div><div class="big">${s.ndmi}</div></div><div><div class="muted">Източник</div><div style="font-weight:700;margin-top:6px">${s.creamino?'Creamino Wi-Fi + TDR/Clegg':'Sentinel-2'}</div></div></div></div>
- <div class="card"><span class="eyebrow">Качество и прогнозен риск · 2017–2026</span>${HK[s.id]&&window.HIST&&window.HIST[HK[s.id]]?histSVG(window.HIST[HK[s.id]]):`<p class="muted" style="margin:6px 0 0">${HK[s.id]?'Зареждам историята…':'Няма сателитна история за този обект (малък терен или демо обект).'}</p>`}</div>
+ return header(s.n,s.city+' · '+s.type,1)+`
+ <div class="card ${s.risk==='H'?'crit':s.risk==='M'?'alert':''}"><div class="between"><span class="eyebrow">Днес</span><span class="pill" style="--c:${riskC[s.risk]}">SRS ${s.srs.toFixed(2)} · ${riskT[s.risk]}</span></div>${s.id==='bsr'?golfMini():s.run?runMini(s.id):pitchMini(s.risk!=='L')}
+ ${s.run?runGrid(s):''}<div class="grid2" style="margin-top:10px;${s.run?'display:none':''}"><div><div class="muted">Твърдост</div><div class="big">${s.gmax??'—'}<small style="font-size:13px"> g</small></div></div><div><div class="muted">Влажност</div><div class="big">${s.vwc??'—'}<small style="font-size:13px"> %</small></div></div><div><div class="muted">Сателит NDMI</div><div class="big">${s.ndmi}</div></div><div><div class="muted">Източник</div><div style="font-weight:700;margin-top:6px">${s.creamino?'Creamino Wi-Fi + TDR/Clegg':'Sentinel-2'}</div></div></div></div>
+ <div class="card"><span class="eyebrow">Качество и прогнозен риск · 2017–2026</span>${HK[s.id]&&window.HIST&&window.HIST[HK[s.id]]?histSVG(window.HIST[HK[s.id]]):`<p class="muted" style="margin:6px 0 0">${HK[s.id]?'Зареждам историята…':s.run?'Историята по години се смята за тревните терени. За парковете предстои.':'Няма сателитна история за този обект (малък терен или демо обект).'}</p>`}</div>
  <div class="row" style="gap:8px"><button class="btn" data-tab="home">Тренирам тук</button><button class="btn ghost" data-tab="map">← Карта</button></div>`}
 function cupSVG(name,num,sponsor){return`<svg viewBox="0 0 160 200" style="width:170px;height:auto;flex:none" role="img" aria-label="Брандирана чаша"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#0c2730"/><stop offset=".5" stop-color="#174654"/><stop offset="1" stop-color="#0c2730"/></linearGradient></defs>
  <path d="M30 34 H130 L118 190 H42 Z" fill="#123844" stroke="#3fd3d8" stroke-width="1.5"/><rect x="24" y="20" width="112" height="16" rx="5" fill="#0a222a" stroke="#3fd3d8" stroke-width="1.5"/><rect x="66" y="10" width="28" height="12" rx="3" fill="#d4a72c"/>
@@ -358,7 +364,7 @@ setTimeout(()=>toast(`<span class="ico" style="color:var(--warn);background:rgba
 if(location.hash.length>1){const h=location.hash.slice(1);if(PERSONAS[h]){who=h;render()}else if(['home','map','mix','body','run','profile'].includes(h)){tab=h;render()}}
 })();
 
-;try{fetch('../map/hist.json').then(r=>r.json()).then(h=>{window.HIST=h;try{render()}catch(e){}}).catch(()=>{});fetch('bsr_golf.json').then(r=>r.json()).then(g=>{window.GOLF=g;try{render()}catch(e){}}).catch(()=>{})}catch(e){}
+;try{fetch('../map/hist.json').then(r=>r.json()).then(h=>{window.HIST=h;try{render()}catch(e){}}).catch(()=>{});Promise.all(['pld','vrn'].map(k=>fetch('run_'+k+'.json').then(r=>r.json()))).then(([a,b])=>{window.RUN={pld:a,vrn:b};try{render()}catch(e){}}).catch(()=>{});fetch('bsr_golf.json').then(r=>r.json()).then(g=>{window.GOLF=g;try{render()}catch(e){}}).catch(()=>{})}catch(e){}
 try{fetch('../map/data.json').then(r=>r.json()).then(d=>{window.REAL=d.turf;window.REAL_ASOF=d.asof;try{render()}catch(e){}}).catch(()=>{})}catch(e){}
 </script>
 </body>
