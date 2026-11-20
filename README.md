@@ -19,6 +19,7 @@ Interactive, fully client-side software demo intended for `https://lab.pointsurf
 | E · Surface Risk Engine | SRS = 0.4·Moist_dev + 0.6·Hard_dev with the documented definition (VWC_opt 23 % vol, G_opt 80 G) and thresholds 0.35 / 0.65 |
 | F · Report Generator | A4 PDF technical report (jsPDF), synthetic-data label on every page |
 | Data Provenance | dataset metadata, three status levels, logged status changes (synthetic dataset locked), log export |
+| Field Session | **real** field data collection for the first Lazur session: sessions, CSI/TDR/Clegg records, raw CSI files stored by SHA-256, QC, CSI↔reference pairs, CSV/JSON/report/ZIP export, recovery after interruption. Initial calibration mode – no predictions. See `FIELD.md` |
 
 ## Why this architecture
 Plain HTML, CSS and JavaScript, no framework and no build step: the app is a static site that opens instantly, can be hosted anywhere (GitHub Pages, any web server, a USB stick), has nothing to update and keeps every calculation inspectable in `js/core.js`. The only third-party file is jsPDF (MIT) in `vendor/` for the PDF export. No backend, no accounts, no external API calls.

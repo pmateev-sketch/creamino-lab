@@ -123,3 +123,6 @@ table.data td.l,table.data th.l{text-align:left}
   .hero{padding:22px 18px}.hero h1{font-size:26px}
   .controls input[type=range]{width:120px}
 }
+
+/* Field Session: the demo dataset selectors do not apply */
+body.fieldmode .top label,body.fieldmode #walkBtn,body.fieldmode #resetBtn{display:none}

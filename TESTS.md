@@ -59,3 +59,10 @@ Run on 2026-11-17 in headless Chrome (Playwright) against the local static build
 **45 of 45 passed.**
 
 Mobile checks use a 390 × 844 viewport; "fits" means the page does not scroll sideways (wide tables scroll inside their own frame).
+
+
+## Field Session (2026-11-21)
+
+* `node test/field.test.js` – 16 / 16 passed (session, CSI/TDR/Clegg records, matching, duplicates, missing metadata, QC FAIL, revisions, CSV, JSON + restore, recovery, synthetic vs real, calibration mode, close status, ZIP).
+* `python3 test/field_e2e.py` – 29 / 29 passed in headless Chrome (UI flow, raw file stored in IndexedDB, duplicate refused, reload restores session and draft, all four exports, demo modules unaffected, phone width).
+* Existing tests after the change: engine 13 / 13 + data file identical; `test/e2e.py` 45 / 45.

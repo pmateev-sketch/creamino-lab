@@ -6,7 +6,7 @@
   var LS_KEY = 'creamino-demo-v1';
   var VIEWS = [
     ['home', 'Home'], ['dashboard', 'Dashboard'], ['explorer', 'Data Explorer'], ['analytics', 'Analytics'],
-    ['validation', 'Validation Lab'], ['spatial', 'Spatial Intelligence'], ['srs', 'Surface Risk'], ['report', 'Report'], ['provenance', 'Data Provenance']
+    ['validation', 'Validation Lab'], ['spatial', 'Spatial Intelligence'], ['srs', 'Surface Risk'], ['report', 'Report'], ['provenance', 'Data Provenance'], ['field', 'Field Session']
   ];
   var TARGETS = { vwc_ref: { short: 'VWC', name: 'Volumetric water content', unit: '% vol', pred: 'vwc_pred' }, gmax_ref: { short: 'Gmax', name: 'Impact hardness (Clegg)', unit: 'G', pred: 'gmax_pred' } };
   var METHODS = { loso: 'Leave-One-Session-Out', grouped: 'Grouped CV by session', kfold: 'K-fold CV (random)', insample: 'In-sample fit (train = test)' };
@@ -175,8 +175,18 @@
   function go(view) { state.view = view; try { history.replaceState(null, '', view === 'home' ? location.pathname : '#' + view); } catch (e) {} render(); window.scrollTo(0, 0); var m = $('#main'); if (m) m.focus({ preventScroll: true }); }
   function render() {
     renderShell();
+    document.body.classList.toggle('fieldmode', state.view === 'field');
+    if (state.view === 'field') { CR.fieldUI.render($('#main'), { toast: toast, openModal: openModal, closeModal: closeModal, shell: fieldShell }); return; }
     var fn = { home: vHome, dashboard: vDashboard, explorer: vExplorer, analytics: vAnalytics, validation: vValidation, spatial: vSpatial, srs: vSRS, report: vReport, provenance: vProvenance }[state.view];
     fn($('#main'));
+  }
+
+  /* Field Session: real data only – the banner and tag describe the field session, not the synthetic dataset */
+  function fieldShell(sess) {
+    var tag = $('#statusTag'), b = $('#banner');
+    if (!sess) { tag.textContent = 'FIELD SESSION'; tag.className = 'tag exp'; b.className = 'banner exp'; b.innerHTML = 'FIELD SESSION — REAL MEASUREMENTS ONLY · SYNTHETIC DEMO DATA ARE NOT USED HERE<br>INITIAL CALIBRATION — NO VALIDATED LOCAL MODEL'; return; }
+    tag.textContent = sess.data_origin === 'real' ? 'REAL FIELD DATA' : 'TEST DATA'; tag.className = 'tag ' + (sess.data_origin === 'real' ? 'exp' : '');
+    b.className = 'banner exp'; b.innerHTML = 'INITIAL CALIBRATION — ' + h(sess.site_id) + ' · ' + (sess.data_origin === 'real' ? 'REAL FIELD DATA' : 'TEST DATA – NOT FOR CALIBRATION') + '<br>NO CSI-DERIVED PREDICTIONS · NO OPERATIONAL STATUS';
   }
 
   /* ---------- Home ---------- */
