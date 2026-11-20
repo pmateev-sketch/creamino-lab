@@ -9,7 +9,7 @@
   var F = {};
 
   F.SCHEMA_VERSION = 'creamino-field-1.0';
-  F.PROCESSING_VERSION = 'field-qc-1.0';
+  F.PROCESSING_VERSION = 'field-qc-1.1';
   F.ORIGINS = ['real', 'test'];                 // synthetic is deliberately not an allowed origin
   F.TYPES = ['CSI', 'TDR', 'CLEGG'];
   F.QC = ['PASS', 'WARNING', 'FAIL', 'INCOMPLETE'];
@@ -94,15 +94,28 @@
       records: [],
       raw_files: [],      // manifest: {sha256, filename, size, type, stored_utc}
       events: [{ time_utc: iso(now), action: 'session created', by: o.operator_id || '' }],
-      counters: { CSI: 0, TDR: 0, CLEGG: 0 }
+      counters: { CSI: 0, TDR: 0, CLEGG: 0, RAW: 0 },
+      change_seq: 0,      // incremented on every data change
+      save_seq: 0,        // incremented on every successful write (conflict detection)
+      backup: { last_zip_utc: null, change_seq_at_zip: null, files: 0, verified: null }
     };
+  };
+  F.touch = function (s) { s.change_seq = (s.change_seq || 0) + 1; return s; };
+  /* older sessions (before field-qc-1.1) get the new bookkeeping fields */
+  F.migrate = function (s) {
+    s.counters = s.counters || {}; if (!s.counters.RAW) s.counters.RAW = 0;
+    if (s.change_seq === undefined) s.change_seq = s.records.length;
+    if (s.save_seq === undefined) s.save_seq = 0;
+    if (!s.backup) s.backup = { last_zip_utc: null, change_seq_at_zip: null, files: 0, verified: null };
+    (s.raw_files || []).forEach(function (f) { if (!f.file_id) { s.counters.RAW++; f.file_id = 'RAW-' + s.session_id + '-' + pad(s.counters.RAW, 4); } });
+    return s;
   };
 
   F.setStatus = function (s, status, by, now) {
     if (F.STATUS.indexOf(status) < 0) throw new Error('Unknown status ' + status);
     if (s.status === status) return s;
     s.events.push({ time_utc: iso(now), action: 'status ' + s.status + ' → ' + status, by: by || s.operator_id || '' });
-    s.status = status; return s;
+    s.status = status; F.touch(s); return s;
   };
   /* closing a session: COMPLETED only when nothing FAILS or is INCOMPLETE */
   F.closeSession = function (s, by, now) {
@@ -173,7 +186,7 @@
     if (!rec.measurement_id) rec.measurement_id = nextId(s, type);
     else if (s.records.some(function (r) { return r.measurement_id === rec.measurement_id; }) && !opts.allowDuplicate) { var e2 = new Error('measurement_id already exists: ' + rec.measurement_id); e2.code = 'DUPLICATE'; throw e2; }
     if (dup) rec.duplicate_of = dup.measurement_id;
-    s.records.push(rec);
+    s.records.push(rec); F.touch(s);
     if (s.status === 'PLANNED') F.setStatus(s, 'IN PROGRESS', rec.operator_id, now);
     s.events.push({ time_utc: iso(now), action: 'added ' + rec.measurement_id, by: rec.operator_id });
     return rec;
@@ -186,7 +199,7 @@
     if (changes.raw_sha256 && changes.raw_sha256 !== old.raw_sha256 && old.raw_sha256) throw new Error('Raw data of a record cannot be replaced; add a new CSI record instead');
     var rec = Object.assign({}, old, changes, { revision: old.revision + 1, supersedes: old.measurement_id + '@r' + old.revision, superseded_by: null, entered_utc: iso(now) });
     old.superseded_by = old.measurement_id + '@r' + rec.revision;
-    s.records.push(rec);
+    s.records.push(rec); F.touch(s);
     s.events.push({ time_utc: iso(now), action: 'revised ' + measurement_id + ' to r' + rec.revision, by: by || '' });
     return rec;
   };
@@ -194,9 +207,11 @@
   F.addRawFile = function (s, meta, now) {
     if (!meta || !meta.sha256) throw new Error('Raw file needs a SHA-256');
     var ex = s.raw_files.filter(function (f) { return f.sha256 === meta.sha256; })[0];
-    if (ex) return { file: ex, duplicate: true };
-    var f = { sha256: meta.sha256, filename: meta.filename || 'raw.bin', size: meta.size || 0, type: meta.type || '', stored_utc: iso(now) };
-    s.raw_files.push(f);
+    if (ex) { if (ex.unavailable) { delete ex.unavailable; F.touch(s); } return { file: ex, duplicate: true }; }
+    s.counters.RAW = (s.counters.RAW || 0) + 1;
+    var f = { file_id: 'RAW-' + s.session_id + '-' + pad(s.counters.RAW, 4), sha256: meta.sha256, filename: meta.filename || 'raw.bin', size: meta.size || 0,
+      type: meta.type || '', last_modified: meta.last_modified || null, stored_utc: iso(now) };
+    s.raw_files.push(f); F.touch(s);
     return { file: f, duplicate: false };
   };
   F.rawRef = function (f) { return 'sha256:' + f.sha256 + ' (' + f.filename + ')'; };
@@ -246,9 +261,13 @@
       if (!blank(rec.raw_data_reference) && !rec.raw_stored) add('WARNING', 'RAW_EXTERNAL', 'Raw data referenced externally, not stored in this session');
       if (ctx && ctx.match) {
         var m = ctx.match[rec.measurement_id] || {};
-        if (!m.tdr && !m.clegg) add(m.nearMiss ? 'WARNING' : 'WARNING', m.nearMiss ? 'REFERENCE_MISMATCH' : 'REFERENCE_MISSING', m.nearMiss || 'No matching TDR/Clegg reference in the same cell and time window');
+        if (!m.tdr && !m.clegg) add('WARNING', m.nearMiss ? 'REFERENCE_MISMATCH' : 'REFERENCE_MISSING', m.nearMiss || 'No matching TDR/Clegg reference in the same cell and time window');
+        if (m.ambiguous) add('WARNING', 'MATCH_AMBIGUOUS', 'Ambiguous CSI–reference match – review manually');
       }
-    } else if (rec.record_type === 'TDR') {
+      add.raw = true;
+    }
+    if (rec.record_type !== 'CSI' && ctx && ctx.pairedRefs && ctx.pairedRefs[rec.measurement_id] && ctx.pairedRefs[rec.measurement_id].ambiguous) add('WARNING', 'MATCH_AMBIGUOUS', 'Ambiguous CSI–reference match – review manually');
+    if (rec.record_type === 'CSI') { /* checks above */ } else if (rec.record_type === 'TDR') {
       if (blank(rec.reference_vwc)) add('INCOMPLETE', 'REFERENCE_MISSING', 'Missing reference VWC');
       else if (!isNum(rec.reference_vwc) || Number(rec.reference_vwc) < T.vwc_range[0] || Number(rec.reference_vwc) > T.vwc_range[1]) add('FAIL', 'VWC_INVALID', 'Invalid VWC ' + rec.reference_vwc + ' (allowed ' + T.vwc_range.join('–') + ' % vol)');
     } else {
@@ -258,28 +277,81 @@
     return { status: worst(checks.map(function (c) { return c.level; })), checks: checks };
   };
 
-  /* ---------- CSI ↔ reference matching ---------- */
+  /* ---------- CSI ↔ reference matching ----------
+     Criteria (unchanged): same grid cell, |Δt| ≤ match_max_dt_min, distance ≤ match_max_dist_m.
+     Since field-qc-1.1: (a) the distance must be computed from X/Y of both records – the same cell alone
+     is not accepted as proof of proximity; (b) matching is one-to-one per reference type: every candidate
+     pair is sorted by Δt, then distance, then IDs, and assigned greedily (deterministic); a reference is
+     never given to two CSI records; (c) when a CSI or a reference had more than one candidate, the accepted
+     pair is flagged AMBIGUOUS for manual review. Every candidate gets an accept/reject reason. */
   F.match = function (s) {
-    var T = s.qc_thresholds, cur = F.current(s), out = {}, pairs = [];
+    var T = s.qc_thresholds, cur = F.current(s), log = [], cands = [];
+    var csis = cur.filter(function (r) { return r.record_type === 'CSI'; });
     var refs = cur.filter(function (r) { return r.record_type !== 'CSI'; });
-    cur.filter(function (r) { return r.record_type === 'CSI'; }).forEach(function (c) {
-      var tc = parseTime(c.timestamp_utc), best = { TDR: null, CLEGG: null }, near = null;
+    csis.forEach(function (c) {
       refs.forEach(function (r) {
-        if (r.grid_cell_id !== c.grid_cell_id || blank(c.grid_cell_id)) return;
-        var dt = Math.abs(parseTime(r.timestamp_utc) - tc) / 60000;
-        var dist = (isNum(c.coordinates_x) && isNum(c.coordinates_y) && isNum(r.coordinates_x) && isNum(r.coordinates_y))
-          ? Math.hypot(Number(c.coordinates_x) - Number(r.coordinates_x), Number(c.coordinates_y) - Number(r.coordinates_y)) : NaN;
-        if (!isFinite(dt)) { near = 'Reference ' + r.measurement_id + ' has no valid time'; return; }
-        if (dt > T.match_max_dt_min) { near = near || ('Reference ' + r.measurement_id + ' is ' + Math.round(dt) + ' min away (limit ' + T.match_max_dt_min + ' min)'); return; }
-        if (isFinite(dist) && dist > T.match_max_dist_m) { near = near || ('Reference ' + r.measurement_id + ' is ' + dist.toFixed(1) + ' m away (limit ' + T.match_max_dist_m + ' m)'); return; }
-        var cand = { id: r.measurement_id, dt_min: dt, dist_m: isFinite(dist) ? dist : null };
-        if (!best[r.record_type] || dt < best[r.record_type].dt_min) best[r.record_type] = cand;
+        if (blank(c.grid_cell_id) || r.grid_cell_id !== c.grid_cell_id) return;   // only same-cell records are candidates
+        var e = { csi: c.measurement_id, ref: r.measurement_id, type: r.record_type, dt_min: null, dist_m: null, decision: 'rejected', reason: '' };
+        var tc = parseTime(c.timestamp_utc), tr = parseTime(r.timestamp_utc);
+        if (!isFinite(tc) || !isFinite(tr)) { e.reason = 'no valid timestamp on ' + (!isFinite(tc) ? 'CSI' : 'reference'); log.push(e); return; }
+        e.dt_min = Math.abs(tr - tc) / 60000;
+        var hasXY = isNum(c.coordinates_x) && isNum(c.coordinates_y) && isNum(r.coordinates_x) && isNum(r.coordinates_y);
+        if (hasXY) e.dist_m = Math.hypot(Number(c.coordinates_x) - Number(r.coordinates_x), Number(c.coordinates_y) - Number(r.coordinates_y));
+        if (e.dt_min > T.match_max_dt_min) { e.reason = 'time difference ' + e.dt_min.toFixed(1) + ' min > ' + T.match_max_dt_min + ' min'; log.push(e); return; }
+        if (!hasXY) { e.reason = 'distance cannot be verified: X/Y missing on ' + (isNum(c.coordinates_x) && isNum(c.coordinates_y) ? 'reference' : 'CSI') + ' (same cell is not proof of ≤ ' + T.match_max_dist_m + ' m)'; log.push(e); return; }
+        if (e.dist_m > T.match_max_dist_m) { e.reason = 'distance ' + e.dist_m.toFixed(2) + ' m > ' + T.match_max_dist_m + ' m'; log.push(e); return; }
+        e.reason = 'candidate: same cell, Δt ' + e.dt_min.toFixed(1) + ' min, distance ' + e.dist_m.toFixed(2) + ' m'; cands.push(e); log.push(e);
       });
-      out[c.measurement_id] = { tdr: best.TDR, clegg: best.CLEGG, nearMiss: (!best.TDR && !best.CLEGG) ? near : null };
-      if (best.TDR) pairs.push({ csi: c.measurement_id, ref: best.TDR.id, type: 'TDR', dt_min: best.TDR.dt_min, dist_m: best.TDR.dist_m });
-      if (best.CLEGG) pairs.push({ csi: c.measurement_id, ref: best.CLEGG.id, type: 'CLEGG', dt_min: best.CLEGG.dt_min, dist_m: best.CLEGG.dist_m });
     });
-    return { byCsi: out, pairs: pairs };
+    var pairs = [], byCsi = {};
+    csis.forEach(function (c) { byCsi[c.measurement_id] = { tdr: null, clegg: null, ambiguous: false, nearMiss: null }; });
+    ['TDR', 'CLEGG'].forEach(function (type) {
+      var list = cands.filter(function (e) { return e.type === type; });
+      var nC = {}, nR = {};
+      list.forEach(function (e) { nC[e.csi] = (nC[e.csi] || 0) + 1; nR[e.ref] = (nR[e.ref] || 0) + 1; });
+      list.sort(function (a, b) { return a.dt_min - b.dt_min || a.dist_m - b.dist_m || (a.csi < b.csi ? -1 : a.csi > b.csi ? 1 : 0) || (a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0); });
+      var usedC = {}, usedR = {};
+      list.forEach(function (e) {
+        if (usedC[e.csi]) { e.reason = 'rejected: CSI already paired with ' + usedC[e.csi] + ' (closer in time/space)'; return; }
+        if (usedR[e.ref]) { e.reason = 'rejected: reference already paired with ' + usedR[e.ref] + ' (one reference per CSI)'; return; }
+        usedC[e.csi] = e.ref; usedR[e.ref] = e.csi; e.decision = 'accepted';
+        e.ambiguous = nC[e.csi] > 1 || nR[e.ref] > 1;
+        e.reason = 'accepted: same cell, Δt ' + e.dt_min.toFixed(1) + ' min, distance ' + e.dist_m.toFixed(2) + ' m' + (e.ambiguous ? ' – AMBIGUOUS: ' + (nC[e.csi] > 1 ? nC[e.csi] + ' ' + type + ' candidates for this CSI' : '') + (nC[e.csi] > 1 && nR[e.ref] > 1 ? ', ' : '') + (nR[e.ref] > 1 ? nR[e.ref] + ' CSI candidates for this reference' : '') + '; review manually' : '');
+        var p = { csi: e.csi, ref: e.ref, type: type, dt_min: e.dt_min, dist_m: e.dist_m, ambiguous: e.ambiguous, reason: e.reason };
+        pairs.push(p); byCsi[e.csi][type === 'TDR' ? 'tdr' : 'clegg'] = p; if (p.ambiguous) byCsi[e.csi].ambiguous = true;
+      });
+    });
+    log.forEach(function (e) { if (e.decision === 'rejected' && e.reason.indexOf('candidate:') === 0) e.reason = 'rejected: ' + e.reason.slice(11); });
+    csis.forEach(function (c) {
+      var b = byCsi[c.measurement_id];
+      if (!b.tdr && !b.clegg) { var rej = log.filter(function (e) { return e.csi === c.measurement_id; })[0]; b.nearMiss = rej ? 'Reference ' + rej.ref + ' not paired: ' + rej.reason.replace(/^rejected: /, '') : null; }
+    });
+    var pairedRefs = {}; pairs.forEach(function (p) { pairedRefs[p.ref] = p; });
+    return { byCsi: byCsi, pairs: pairs, log: log, pairedRefs: pairedRefs,
+      unmatchedCsi: csis.filter(function (c) { return !byCsi[c.measurement_id].tdr && !byCsi[c.measurement_id].clegg; }).map(function (c) { return c.measurement_id; }),
+      unmatchedRefs: refs.filter(function (r) { return !pairedRefs[r.measurement_id]; }).map(function (r) { return r.measurement_id; }) };
+  };
+
+  /* three separate states for CSI data: raw file stored / metadata entered manually / CSI parsed.
+     No CSI parser is implemented, so csi_parse_status is always NOT_PARSED. */
+  F.rawState = function (s, r) {
+    if (r.record_type !== 'CSI') return { raw_file_status: 'N/A', metadata_entry: 'MANUAL', csi_parse_status: 'N/A' };
+    var stored = r.raw_stored && r.raw_sha256 && s.raw_files.some(function (f) { return f.sha256 === r.raw_sha256 && !f.unavailable; });
+    return { raw_file_status: stored ? 'STORED' : (r.raw_stored ? 'MISSING' : !blank(r.raw_data_reference) ? 'EXTERNAL_REFERENCE' : 'MISSING'), metadata_entry: 'MANUAL', csi_parse_status: 'NOT_PARSED' };
+  };
+  F.rawStates = function (s) {
+    var o = { stored: 0, external: 0, missing: 0 };
+    F.current(s).forEach(function (r) { if (r.record_type !== 'CSI') return; var st = F.rawState(s, r).raw_file_status; if (st === 'STORED') o.stored++; else if (st === 'EXTERNAL_REFERENCE') o.external++; else o.missing++; });
+    return o;
+  };
+  /* backup = a ZIP package was generated and verified in this browser; whether the file was kept is outside the app's knowledge */
+  F.backupStatus = function (s) {
+    var b = s.backup || {};
+    if (!b.last_zip_utc) return { state: 'NOT_BACKED_UP', label: 'No ZIP package exported yet', changes_since: s.change_seq || 0 };
+    var since = (s.change_seq || 0) - (b.change_seq_at_zip || 0);
+    if (b.verified === false) return { state: 'BACKUP_INCOMPLETE', label: 'Last ZIP (' + b.last_zip_utc + ') had missing or corrupted raw files', changes_since: since };
+    if (since > 0) return { state: 'OUTDATED', label: since + ' change(s) since the last ZIP (' + b.last_zip_utc + ')', changes_since: since };
+    return { state: 'EXPORTED', label: 'ZIP exported and verified at ' + b.last_zip_utc + ' – confirm the file is saved in two places', changes_since: 0 };
   };
 
   /* full evaluation: QC for every current record + pairs + dashboard metrics */
@@ -287,10 +359,10 @@
     var cur = F.current(s), idCount = {};
     s.records.forEach(function (r) { if (!r.superseded_by) idCount[r.measurement_id] = (idCount[r.measurement_id] || 0) + 1; });
     var m = F.match(s);
-    var ctx = { idCount: idCount, match: m.byCsi };
+    var ctx = { idCount: idCount, match: m.byCsi, pairedRefs: m.pairedRefs };
     var evald = cur.map(function (r) { return { rec: r, qc: F.qcRecord(s, r, ctx) }; });
     var qcById = {}; evald.forEach(function (e) { qcById[e.rec.measurement_id] = e.qc.status; });
-    var validPairs = m.pairs.filter(function (p) { var a = qcById[p.csi], b = qcById[p.ref]; return a !== 'FAIL' && a !== 'INCOMPLETE' && b !== 'FAIL' && b !== 'INCOMPLETE'; });
+    var validPairs = m.pairs.filter(function (p) { var a = qcById[p.csi], b = qcById[p.ref]; return !p.ambiguous && a !== 'FAIL' && a !== 'INCOMPLETE' && b !== 'FAIL' && b !== 'INCOMPLETE'; });
     var csiWithValid = {}; validPairs.forEach(function (p) { csiWithValid[p.csi] = true; });
     var counts = { PASS: 0, WARNING: 0, FAIL: 0, INCOMPLETE: 0 };
     evald.forEach(function (e) { counts[e.qc.status]++; });
@@ -301,8 +373,9 @@
     ['device_id', 'device_model', 'firmware_version', 'wifi_channel', 'bandwidth', 'subcarrier_count', 'window_duration'].forEach(function (k) { if (blank(s.device[k])) sessionMissing.push(k); });
     if (blank(s.configuration)) sessionMissing.push('measurement configuration');
     var byType = function (t) { return cur.filter(function (r) { return r.record_type === t; }).length; };
+    var raw = F.rawStates(s);
     return {
-      current: evald,
+      current: evald, matchLog: m.log, unmatchedCsi: m.unmatchedCsi, unmatchedRefs: m.unmatchedRefs, rawStates: raw,
       pairs: m.pairs, validPairs: validPairs,
       metrics: {
         measurements: cur.length,
@@ -313,7 +386,9 @@
         qc_pass_rate: cur.length ? counts.PASS / cur.length : null,
         completeness: req ? filled / req : null,
         session_missing: sessionMissing,
-        raw_files: s.raw_files.length,
+        raw_files: s.raw_files.length, ambiguous_pairs: m.pairs.filter(function (p) { return p.ambiguous; }).length,
+        csi_raw_stored: raw.stored, csi_raw_external: raw.external, csi_raw_missing: raw.missing, csi_parsed: 0,
+        backup: F.backupStatus(s),
         revisions: s.records.length - cur.length
       },
       model: { validated: !!(s.model_status && s.model_status.validated), predictions_active: false, message: F.CALIBRATION_MESSAGE }
@@ -323,7 +398,7 @@
   F.predict = function () { return { available: false, reason: F.CALIBRATION_MESSAGE }; };
 
   /* ---------- export ---------- */
-  var CSV_COLS = ['record_type', 'data_origin'].concat(F.FIELDS).concat(['qc_checks', 'revision', 'supersedes', 'superseded_by', 'raw_sha256', 'raw_stored', 'entered_utc', 'duplicate_of']);
+  var CSV_COLS = ['record_type', 'data_origin'].concat(F.FIELDS).concat(['qc_checks', 'revision', 'supersedes', 'superseded_by', 'raw_sha256', 'raw_stored', 'raw_file_status', 'metadata_entry', 'csi_parse_status', 'paired_with', 'entered_utc', 'duplicate_of']);
   F.CSV_COLUMNS = CSV_COLS;
   function csvCell(v) { if (v === null || v === undefined) return ''; v = String(v); return /[",\n\r;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
   F.toCSV = function (s, opts) {
@@ -331,7 +406,8 @@
     var ev = F.evaluate(s), qc = {}; ev.current.forEach(function (e) { qc[e.rec.measurement_id] = e.qc; });
     var rows = (opts.includeRevisions === false ? F.current(s) : s.records).map(function (r) {
       var q = r.superseded_by ? { status: 'SUPERSEDED', checks: [] } : qc[r.measurement_id];
-      var o = Object.assign({}, r, { quality_status: q.status, qc_checks: q.checks.map(function (c) { return c.level + ':' + c.code; }).join(' | ') });
+      var pw = ev.pairs.filter(function (p) { return !r.superseded_by && (p.csi === r.measurement_id || p.ref === r.measurement_id); }).map(function (p) { return (p.csi === r.measurement_id ? p.ref : p.csi) + (p.ambiguous ? ' (AMBIGUOUS)' : ''); }).join(' ');
+      var o = Object.assign({}, r, F.rawState(s, r), { quality_status: q.status, paired_with: pw, qc_checks: q.checks.map(function (c) { return c.level + ':' + c.code; }).join(' | ') });
       return CSV_COLS.map(function (k) { return csvCell(o[k]); }).join(',');
     });
     return '﻿' + CSV_COLS.join(',') + '\n' + rows.join('\n') + '\n';
@@ -341,15 +417,15 @@
     var out = JSON.parse(JSON.stringify(s));
     out.export = { exported_utc: iso(now), schema_version: F.SCHEMA_VERSION, processing_version: F.PROCESSING_VERSION, note: 'Raw CSI files are listed by SHA-256 in raw_files; their bytes are in the ZIP package, not in this JSON.' };
     out.qc = ev.current.map(function (e) { return { measurement_id: e.rec.measurement_id, status: e.qc.status, checks: e.qc.checks }; });
-    out.pairs = ev.pairs; out.valid_pairs = ev.validPairs; out.metrics = ev.metrics; out.model = ev.model;
+    out.pairs = ev.pairs; out.valid_pairs = ev.validPairs; out.match_log = ev.matchLog; out.metrics = ev.metrics; out.model = ev.model;
     return JSON.stringify(out, null, 2);
   };
   F.fromJSON = function (text) {
     var o = JSON.parse(text);
     if (!o || !o.session_id || !Array.isArray(o.records)) throw new Error('Not a Creamino field session file');
     if (F.ORIGINS.indexOf(o.data_origin) < 0) throw new Error('Session origin "' + o.data_origin + '" is not accepted (only real or test)');
-    ['export', 'qc', 'pairs', 'valid_pairs', 'metrics', 'model'].forEach(function (k) { delete o[k]; });
-    o.events = o.events || []; o.events.push({ time_utc: iso(), action: 'restored from JSON export', by: '' });
+    ['export', 'qc', 'pairs', 'valid_pairs', 'match_log', 'metrics', 'model'].forEach(function (k) { delete o[k]; });
+    F.migrate(o);
     return o;
   };
   function esc(v) { return String(v === null || v === undefined ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -366,8 +442,8 @@
     h += '<h2>Counts</h2><table><tr><th>Measurements (current)</th><td>' + M.measurements + '</td></tr><tr><th>CSI records</th><td>' + M.csi + '</td></tr><tr><th>Reference measurements</th><td>TDR ' + M.tdr + ' · Clegg ' + M.clegg + '</td></tr><tr><th>CSI–reference pairs</th><td>' + M.pairs_total + ' (valid ' + M.pairs_valid + ')</td></tr><tr><th>Raw CSI files stored</th><td>' + M.raw_files + '</td></tr><tr><th>Superseded revisions kept</th><td>' + M.revisions + '</td></tr></table>';
     h += '<h2>QC statistics</h2><table><tr><th>PASS</th><td>' + M.qc.PASS + '</td></tr><tr><th>WARNING</th><td>' + M.qc.WARNING + '</td></tr><tr><th>FAIL</th><td>' + M.qc.FAIL + '</td></tr><tr><th>INCOMPLETE</th><td>' + M.qc.INCOMPLETE + '</td></tr><tr><th>QC pass rate</th><td>' + pct(M.qc_pass_rate) + '</td></tr><tr><th>Data completeness</th><td>' + pct(M.completeness) + '</td></tr><tr><th>Missing session metadata</th><td>' + esc(M.session_missing.join(', ') || 'none') + '</td></tr></table>';
     h += '<h2>Incomplete or flagged records</h2>' + (inc.length ? '<table><tr><th>measurement_id</th><th>QC</th><th>Reasons</th></tr>' + inc.map(function (e) { return '<tr><td>' + esc(e.rec.measurement_id) + '</td><td>' + e.qc.status + '</td><td>' + esc(e.qc.checks.map(function (c) { return c.message; }).join('; ')) + '</td></tr>'; }).join('') + '</table>' : '<p>None.</p>');
-    h += '<h2>Limitations</h2><ul><li>No locally validated CSI model exists for this site: no CSI-derived VWC, Gmax or SRS values are produced, and no operational recommendations are given.</li><li>Records flagged FAIL are kept unchanged with their reason; they must be reviewed before any use.</li><li>Data are stored locally in this browser (IndexedDB) until exported; export after every session.</li><li>Pairing uses the same grid cell, ≤ ' + s.qc_thresholds.match_max_dt_min + ' min and ≤ ' + s.qc_thresholds.match_max_dist_m + ' m between CSI and reference.</li></ul>';
-    h += '<h2>Files and data</h2><ul>' + (files || []).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul><table><tr><th>Raw file</th><th>Size</th><th>SHA-256</th></tr>' + (s.raw_files.length ? s.raw_files.map(function (f) { return '<tr><td>' + esc(f.filename) + '</td><td>' + f.size + ' B</td><td style="font-family:monospace;font-size:11px">' + esc(f.sha256) + '</td></tr>'; }).join('') : '<tr><td colspan="3">No raw files stored</td></tr>') + '</table>';
+    h += '<h2>Limitations</h2><ul><li>No locally validated CSI model exists for this site: no CSI-derived VWC, Gmax or SRS values are produced, and no operational recommendations are given.</li><li>Records flagged FAIL are kept unchanged with their reason; they must be reviewed before any use.</li><li>Data are stored locally in this browser (IndexedDB) until exported; export after every session.</li><li>Pairing (one-to-one) uses the same grid cell, ≤ ' + s.qc_thresholds.match_max_dt_min + ' min and ≤ ' + s.qc_thresholds.match_max_dist_m + ' m computed from x/y of both records; pairs without coordinates are rejected, ambiguous pairs are flagged and not counted as valid.</li><li>No CSI parser is implemented: CSI metadata are entered manually and raw files are stored unparsed.</li><li>Browser storage is not a backup; only a verified ZIP kept outside the device is.</li></ul>';
+    h += '<h2>Files and data</h2><ul>' + (files || []).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul><table><tr><th>Raw file</th><th>Size</th><th>SHA-256</th></tr>' + (s.raw_files.length ? s.raw_files.map(function (f) { return '<tr><td>' + esc((f.file_id ? f.file_id + ' · ' : '') + f.filename) + (f.unavailable ? ' – <b>' + esc(f.unavailable) + '</b>' : '') + '</td><td>' + f.size + ' B</td><td style="font-family:monospace;font-size:11px">' + esc(f.sha256) + '</td></tr>'; }).join('') : '<tr><td colspan="3">No raw files stored</td></tr>') + '</table>';
     h += '<p style="color:#777;font-size:12px">Generated ' + esc(iso(now)) + ' · ' + esc(F.SCHEMA_VERSION) + '</p></body></html>';
     return h;
   };
@@ -401,6 +477,97 @@
     var all = parts.concat(central, [end]), total = all.reduce(function (a, c) { return a + c.length; }, 0), out = new Uint8Array(total), p = 0;
     all.forEach(function (c) { out.set(c, p); p += c.length; });
     return out;
+  };
+
+  /* ---------- ZIP reading (store method only – the method this module writes) ----------
+     Every entry is checked against its CRC-32 and size; nothing is accepted silently. */
+  function utf8dec(u) { if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(u); return Buffer.from(u).toString('utf8'); }
+  F.unzip = function (u8) {
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), eocd = -1;
+    for (var i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error('Not a ZIP file (end-of-central-directory record not found) – the file may be truncated');
+    var n = dv.getUint16(eocd + 10, true), cd = dv.getUint32(eocd + 16, true), out = [];
+    if (cd >= u8.length) throw new Error('ZIP central directory is outside the file – the file is truncated or damaged');
+    for (var k = 0, p = cd; k < n; k++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('ZIP central directory is damaged at entry ' + (k + 1));
+      var method = dv.getUint16(p + 10, true), crc = dv.getUint32(p + 16, true), csize = dv.getUint32(p + 20, true), usize = dv.getUint32(p + 24, true);
+      var nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+      var name = utf8dec(u8.subarray(p + 46, p + 46 + nl)); p += 46 + nl + xl + cl;
+      var e = { name: name, size: usize, crc: crc, ok: false, problem: '' };
+      if (lho + 30 > u8.length || dv.getUint32(lho, true) !== 0x04034b50) { e.problem = 'local header missing or damaged'; out.push(e); continue; }
+      var start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+      if (method !== 0) { e.problem = 'compressed entry (method ' + method + ') – this module reads only its own uncompressed packages'; out.push(e); continue; }
+      if (start + csize > u8.length) { e.problem = 'entry data is cut off (file truncated)'; out.push(e); continue; }
+      e.data = u8.subarray(start, start + csize);
+      if (csize !== usize) e.problem = 'size mismatch in ZIP header';
+      else if (crc32(e.data) !== crc) e.problem = 'CRC-32 mismatch – bytes are damaged';
+      else e.ok = true;
+      out.push(e);
+    }
+    return out;
+  };
+
+  /* zip path of a raw file: file_id keeps names unique even when two files share an original name */
+  F.rawZipPath = function (f) { return 'raw/' + (f.file_id || f.sha256.slice(0, 12)) + '_' + String(f.filename).replace(/[\\/:*?"<>|]/g, '_'); };
+
+  /* integrity manifest. verify: {sha256: 'VERIFIED'|'MISSING'|'CORRUPTED'} from re-hashing the stored bytes at export time */
+  F.buildManifest = function (s, verify, docs, now) {
+    var cur = s.records;
+    var files = s.raw_files.map(function (f) {
+      return { file_id: f.file_id, measurement_ids: cur.filter(function (r) { return r.raw_sha256 === f.sha256; }).map(function (r) { return r.measurement_id + (r.revision > 1 ? '@r' + r.revision : ''); }),
+        original_filename: f.filename, zip_path: verify[f.sha256] === 'VERIFIED' ? F.rawZipPath(f) : null, size: f.size, sha256: f.sha256, mime: f.type || '',
+        last_modified: f.last_modified || null, stored_utc: f.stored_utc, verification: verify[f.sha256] || 'MISSING' };
+    });
+    var bad = files.filter(function (f) { return f.verification !== 'VERIFIED'; });
+    return { manifest_version: 'creamino-field-zip-1', session_id: s.session_id, export_utc: iso(now), schema_version: F.SCHEMA_VERSION, processing_version: F.PROCESSING_VERSION,
+      change_seq: s.change_seq, records_total: s.records.length, records_current: F.current(s).length,
+      documents: docs, raw_files: files,
+      summary: { raw_total: files.length, verified: files.length - bad.length, missing: bad.filter(function (f) { return f.verification === 'MISSING'; }).length, corrupted: bad.filter(function (f) { return f.verification === 'CORRUPTED'; }).length, complete: bad.length === 0 },
+      note: 'Browser storage is not a backup. This package is the backup only once it is saved outside this device and opened successfully.' };
+  };
+  F.manifestCSV = function (m) {
+    var cols = ['session_id', 'file_id', 'measurement_ids', 'original_filename', 'zip_path', 'size', 'sha256', 'mime', 'export_utc', 'verification'];
+    return '﻿' + cols.join(',') + '\n' + m.raw_files.map(function (f) { var o = Object.assign({}, f, { session_id: m.session_id, export_utc: m.export_utc, measurement_ids: f.measurement_ids.join(' ') }); return cols.map(function (k) { return csvCell(o[k]); }).join(','); }).join('\n') + '\n';
+  };
+
+  /* restore plan from unzipped entries. hashes: {zip_path: sha256 of entry bytes} computed by the caller.
+     Returns the session plus per-file verdicts; only VERIFIED files may be stored. */
+  F.planRestore = function (entries, hashes) {
+    var by = {}; entries.forEach(function (e) { by[e.name] = e; });
+    var mEntry = by['MANIFEST.json'], problems = [], manifest = null;
+    if (!mEntry) problems.push('MANIFEST.json is missing – package was not created by this version or is incomplete');
+    else if (!mEntry.ok) throw new Error('MANIFEST.json is damaged (' + mEntry.problem + ') – nothing restored');
+    else manifest = JSON.parse(utf8dec(mEntry.data));
+    var sEntry = entries.filter(function (e) { return /_session\.json$/.test(e.name); })[0];
+    if (!sEntry) throw new Error('Session JSON not found in the package – nothing restored');
+    if (!sEntry.ok) throw new Error('Session JSON is damaged (' + sEntry.problem + ') – nothing restored');
+    if (manifest) {
+      var d = (manifest.documents || []).filter(function (x) { return x.zip_path === sEntry.name; })[0];
+      if (!d) problems.push('Session JSON is not listed in the manifest');
+      else if (d.sha256 !== hashes[sEntry.name]) throw new Error('Session JSON SHA-256 does not match the manifest – nothing restored');
+    }
+    var s = F.fromJSON(utf8dec(sEntry.data));
+    if (manifest && manifest.session_id !== s.session_id) throw new Error('Manifest belongs to session ' + manifest.session_id + ', JSON to ' + s.session_id + ' – nothing restored');
+    var mf = {}; if (manifest) manifest.raw_files.forEach(function (f) { mf[f.sha256] = f; });
+    var files = s.raw_files.map(function (f) {
+      var m = mf[f.sha256], path = m ? m.zip_path : F.rawZipPath(f), e = path ? by[path] : null, v = { file: f, zip_path: path, status: 'VERIFIED', reason: '' };
+      if (manifest && !m) { v.status = 'MISSING'; v.reason = 'not listed in MANIFEST.json'; }
+      else if (m && m.verification !== 'VERIFIED') { v.status = m.verification; v.reason = 'already ' + m.verification + ' when the package was exported'; }
+      else if (!e) { v.status = 'MISSING'; v.reason = 'file not present in the ZIP'; }
+      else if (!e.ok) { v.status = 'CORRUPTED'; v.reason = e.problem; }
+      else if (e.data.length !== f.size) { v.status = 'CORRUPTED'; v.reason = 'size ' + e.data.length + ' B, expected ' + f.size + ' B'; }
+      else if (hashes[path] !== f.sha256) { v.status = 'CORRUPTED'; v.reason = 'SHA-256 does not match'; }
+      else v.data = e.data;
+      return v;
+    });
+    entries.forEach(function (e) { if (!e.ok && e !== mEntry && e !== sEntry && !files.some(function (v) { return v.zip_path === e.name; })) problems.push(e.name + ': ' + e.problem); });
+    return { session: s, manifest: manifest, files: files, problems: problems,
+      ok: !problems.length && files.every(function (v) { return v.status === 'VERIFIED'; }) };
+  };
+  /* mark files that were not restored so the records show MISSING instead of STORED */
+  F.markUnavailable = function (s, verdicts, now) {
+    verdicts.forEach(function (v) { if (v.status !== 'VERIFIED') v.file.unavailable = v.status + ' at restore ' + iso(now) + ': ' + v.reason; });
+    return s;
   };
 
   CR.field = F;
