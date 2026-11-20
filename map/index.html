@@ -50,6 +50,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{o
 <script>
 {
 const TN={F:'Футболен терен',S:'Стадион',G:'Голф игрище'};
+let H={};
+function histSVG(R){if(!R||R.length<2)return'';const W=250,H=86,l=22,r=6,t=8,b=16,x=y=>l+(y-2017)/9*(W-l-r),yy=v=>t+(100-v)/100*(H-t-b);
+const ln=(i,c)=>`<path d="${R.map((o,j)=>(j?'L':'M')+x(o[0]).toFixed(1)+' '+yy(o[i]).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="2"/>`+R.map(o=>`<circle cx="${x(o[0]).toFixed(1)}" cy="${yy(o[i]).toFixed(1)}" r="2.2" fill="${c}"><title>${o[0]}: ${o[i]}</title></circle>`).join('');
+let g='';for(const v of[0,50,100])g+=`<line x1="${l}" x2="${W-r}" y1="${yy(v)}" y2="${yy(v)}" stroke="rgba(128,140,140,.25)"/><text x="${l-4}" y="${yy(v)+3}" font-size="8" text-anchor="end" fill="#7d8f8a">${v}</text>`;
+for(const y of[2017,2020,2023,2026])g+=`<text x="${x(y)}" y="${H-4}" font-size="8" text-anchor="${y>2025?"end":y<2018?"start":"middle"}" fill="#7d8f8a">${y}</text>`;
+return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:block;margin-top:4px" role="img" aria-label="Качество и прогнозен риск по години">${g}${ln(1,'#2a9d57')}${ln(2,'#e0703a')}</svg><div style="font-size:11px;line-height:1.35"><b style="color:#2a9d57">●</b> качество (лятна растителност) <b style="color:#e0703a">●</b> прогнозен сърфейс риск<br><span style="color:#7d8f8a">Сателитен индикатор, 0–100 спрямо всички терени в БГ за годината (юни–август). Не е измерен SRS и не е оценка по FIFA.</span></div>`}
 const GN={A:'A · горна четвърт',B:'B · над средното',C:'C · под средното',D:'D · долна четвърт',L:'Ниска растителност',X:'Изкуствена настилка',S:'Твърде малък за сателита',"?":'Няма чиста снимка'};
 const GC={A:'#138a45',B:'#7cbf3c',C:'#e3b52b',D:'#d0602a'};
 const gcol=g=>GC[g]||'#9aa59e';
@@ -71,7 +77,7 @@ const V={
   h1:n=>`${n.toLocaleString('bg')} тревни терена, оценени от сателита`,sub:()=>`Sentinel-2, данни към ${D.asof}. Сравнителна оценка A–D.`,
   legend:'<b>Оценка</b><br><i class="dot" style="background:#138a45"></i>A <i class="dot" style="background:#7cbf3c"></i>B <i class="dot" style="background:#e3b52b"></i>C <i class="dot" style="background:#d0602a"></i>D<br><i class="dot" style="background:#9aa59e"></i>без оценка <i class="dot" style="background:#e0a80b"></i>Point Surface',
   kpis:v=>{const c={A:0,D:0};v.forEach(o=>{if(o[8] in c)c[o[8]]++});return[[v.length,'терена'],[c.A,'с A'],[c.D,'с D']]},
-  pop:o=>`<h3>${esc(o[4]||TN[o[0]])}</h3><div class="st">${TN[o[0]]} · ${esc(o[5])} · ${o[3].toLocaleString('bg')} m²</div>${o[6]?`<span class="tag">Point Surface: ${esc(o[6])}</span>`:''}<div style="margin-top:5px"><span class="badge" style="background:${gcol(o[8])}">${o[8]}${o[9]!=null?' · '+o[9]+'/100':''}</span> ${GN[o[8]]||''}</div><div class="st">NDVI ${o[10]??'–'} · NDMI ${o[11]??'–'} · снимка ${esc(o[12])||'–'}</div>`},
+  pop:o=>`<h3>${esc(o[4]||TN[o[0]])}</h3><div class="st">${TN[o[0]]} · ${esc(o[5])} · ${o[3].toLocaleString('bg')} m²</div>${o[6]?`<span class="tag">Point Surface: ${esc(o[6])}</span>`:''}<div style="margin-top:5px"><span class="badge" style="background:${gcol(o[8])}">${o[8]}${o[9]!=null?' · '+o[9]+'/100':''}</span> ${GN[o[8]]||''}</div><div class="st">NDVI ${o[10]??'–'} · NDMI ${o[11]??'–'} · снимка ${esc(o[12])||'–'}</div>${H[o[1]+','+o[2]]?'<div style="margin-top:6px;font-weight:700;font-size:12px">Промяна през годините</div>'+histSVG(H[o[1]+','+o[2]]):''}`},
  piste:{rows:()=>D.piste,ll:o=>[o[0],o[1]],name:o=>o[2]||(o[4]==='nordic'?'Писта за ски бягане':'Ски писта'),town:o=>o[8],col:o=>scol(o[6]),ref:()=>false,vis:o=>(on.down&&o[4]==='downhill')||(on.nord&&o[4]==='nordic'),
   badge:o=>[o[6]!=null?Math.round(o[6])+'%':'–',scol(o[6])],
   sorts:[['snow','По сняг ↓',(a,b)=>(b[6]??-1)-(a[6]??-1)],['town','По курорт',(a,b)=>a[8].localeCompare(b[8],'bg')]],chips:[['down','Спускане'],['nord','Ски бягане']],
@@ -95,7 +101,7 @@ function setView(v){view=v;for(const t of document.querySelectorAll('.tab'))t.se
 function render(){const a=A(),R=a.rows();
  const vis=R.map((o,i)=>[o,i]).filter(([o])=>a.vis(o)&&(!q||(a.name(o)+' '+a.town(o)).toLowerCase().includes(q)));
  layer.clearLayers();marks=[];
- [...vis].sort((x,y)=>a.ref(x[0])-a.ref(y[0])).forEach(([o,i])=>{const m=L.circleMarker(a.ll(o),{radius:a.ref(o)?9:5,color:a.ref(o)?'#0e1c15':'#fff',weight:a.ref(o)?2:1,fillColor:a.col(o),fillOpacity:.95}).bindPopup(`<div class="pop">${a.pop(o)}</div>`);m.addTo(layer);marks[i]=m});
+ [...vis].sort((x,y)=>a.ref(x[0])-a.ref(y[0])).forEach(([o,i])=>{const m=L.circleMarker(a.ll(o),{radius:a.ref(o)?9:5,color:a.ref(o)?'#0e1c15':'#fff',weight:a.ref(o)?2:1,fillColor:a.col(o),fillOpacity:.95}).bindPopup(()=>`<div class="pop">${a.pop(o)}</div>`);m.addTo(layer);marks[i]=m});
  $('kpis').innerHTML=a.kpis(vis.map(x=>x[0])).map(([b,t])=>`<div class="kpi"><b>${typeof b==='number'?b.toLocaleString('bg'):b}</b><span>${t}</span></div>`).join('');
  const cmp=a.sorts.find(s=>s[0]===sortBy)[2];
  const L2=[...vis].sort((x,y)=>(a.ref(y[0])-a.ref(x[0]))||cmp(x[0],y[0])).slice(0,300);
@@ -106,6 +112,7 @@ $('list').addEventListener('keydown',e=>{if(e.key==='Enter'){const li=e.target.c
 $('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
 $('sort').addEventListener('change',e=>{sortBy=e.target.value;render()});
 for(const t of document.querySelectorAll('.tab'))t.onclick=()=>setView(t.dataset.v);
+fetch('hist.json').then(r=>r.json()).then(h=>{H=h}).catch(()=>{});
 fetch('data.json').then(r=>r.json()).then(d=>{D=d;const h=location.hash.slice(1);setView(V[h]?h:'turf')});
 }
 </script></body></html>
