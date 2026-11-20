@@ -91,7 +91,7 @@ const gcol=g=>GC[g]||'#9aa59e';
 const scol=p=>p==null?'#9aa59e':p>=50?'#2a8fd6':p>=10?'#8cc3ea':'#b9a07a';
 const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=id=>document.getElementById(id);
-const map=L.map('map',{preferCanvas:true}).fitBounds([[41.2,22.3],[44.25,28.65]]);
+const map=L.map('map',{preferCanvas:true}).fitBounds([[41.2,22.3],[44.25,28.65]]);window.CMAP=map;
 const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri World Imagery'});
 L.control.layers({'Карта':osm,'Сателит':sat},null,{position:'topleft'}).addTo(map);
@@ -132,7 +132,7 @@ const V={
   pop:o=>`<h3>${esc(o[2]||WT[o[3]]||'Водоем')}</h3><div class="st">${WT[o[3]]||'Водоем'} · ${esc(o[5])} · ${o[4].toLocaleString('bg')} ha</div><div style="margin-top:5px"><span class="badge" style="background:${acol(o[8])}">Водорасли: ${alg(o[8])[0]}</span>${o[8]!=null?' <span class="st">NDCI '+o[8]+'</span>':''}</div><div class="st" style="margin-top:4px">Водно огледало: ${o[6]!=null?Math.round(o[6])+'% от контура':'–'}${o[7]>0?' · лед '+Math.round(o[7])+'%':''} · снимка ${esc(o[9])||'–'}</div><div class="st" style="margin-top:4px;font-size:11px">${alg(o[8])[1]} Сателитен индикатор, не е анализ на водата. Къпане – само на обозначени места; качеството на водата се следи от РЗИ.</div>`}
 };
 const A=()=>V[view];
-function setView(v){if(v==='active'&&!ACT){fetch('active.json').then(r=>r.json()).then(j=>{ACT=[...j.parks,...j.courts.map(c=>[c[0],c[1],c[3],'court',c[2],c[4]])];setView('active')});return}view=v;for(const t of document.querySelectorAll('.tab'))t.setAttribute('aria-selected',t.dataset.v===v);
+function setView(v){if(v==='active'&&!ACT){fetch('active.json').then(r=>r.json()).then(j=>{ACT=[...j.parks,...j.courts.map(c=>[c[0],c[1],c[3],'court',c[2],c[4]])];setView('active')});return}view=v;if(window.CREAMINO_HEAT)CREAMINO_HEAT(v==='active');for(const t of document.querySelectorAll('.tab'))t.setAttribute('aria-selected',t.dataset.v===v);
  on={F:1,S:1,G:1,down:1,nord:1,big:1,small:1,park:1,court:1,dog:1};refOnly=false;sortBy=A().sorts[0][0];
  $('sort').innerHTML=A().sorts.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
  $('chips').innerHTML=A().chips.map(([k,l])=>`<button class="chip" data-c="${k}" aria-pressed="${k!=='R'}">${l}</button>`).join('');
@@ -156,4 +156,6 @@ fetch('leagues.json').then(r=>r.json()).then(j=>{LGT=j;attachLeagues();if(view==
 fetch('hist.json').then(r=>r.json()).then(h=>{H=h}).catch(()=>{});
 fetch('data.json').then(r=>r.json()).then(d=>{D=d;attachLeagues();const h=location.hash.slice(1);setView(V[h]?h:'turf')});
 }
-</script></body></html>
+</script>
+<script>window.CREAMINO_SB={url:'',key:''};</script>
+<script src="community.js"></script></body></html>
