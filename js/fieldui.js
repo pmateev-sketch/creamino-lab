@@ -162,6 +162,19 @@
       ['IN PROGRESS', 'CALIBRATION'].map(function (st) { return '<button class="btn ghost small" data-status="' + st + '"' + (s.status === st ? ' disabled' : '') + '>' + st + '</button>'; }).join('') +
       '<button class="btn small" id="fFinish">Close session</button><span class="muted" style="font-size:12px">Close → COMPLETED, or REVIEW REQUIRED if any record FAILS or is INCOMPLETE.</span>' +
       '<span class="muted" style="margin-left:auto;font-size:12px">' + (ui.lastFailed ? '<b style="color:#C0392B">Last change NOT saved</b>' : ui.lastSaved ? 'Saved locally ' + ui.lastSaved.toLocaleTimeString() + ' (this browser only)' : 'Stored locally (this browser only)') + '</span></div>';
+    /* logger file intake */
+    var stg = function (v, good) { return '<span class="tag ' + (good ? 'L' : (/^NO|NOT|MISSING|CORRUPTED|UNKNOWN|EMPTY/.test(v) ? 'H' : 'M')) + '">' + h(v) + '</span>'; };
+    html += '<h2>Logger file intake</h2><div class="card" id="fIntakeCard"><p class="muted" style="margin-top:0">Import the original files copied from the CSI logger. Each file is read, hashed (SHA-256), stored unchanged, re-read and re-hashed, and its container (pcap, text, …) is identified from standard signatures. <b>No CSI is decoded here:</b> CSI format stays NOT IDENTIFIED and parse status NOT PARSED. Link each file to a CSI record to enter its metadata.</p>' +
+      '<input type="file" id="fIntake" multiple> <span class="muted" id="fIntakeOut" style="font-size:12px"></span>' +
+      (s.raw_files.length ? '<div class="tablewrap" style="margin-top:10px"><table class="data" id="fIntakeTable"><thead><tr><th class="l">File ID / original name</th><th>Size</th><th class="l">1 Received</th><th class="l">2 Raw stored</th><th class="l">3 SHA-256 verified</th><th class="l">4 Metadata</th><th class="l">5 Container / CSI format</th><th class="l">6 CSI parse status</th><th></th></tr></thead><tbody>' +
+        s.raw_files.map(function (f) {
+          var st = F.intakeState(s, f), linked = st.metadata.indexOf('MANUAL') === 0;
+          return '<tr data-sha="' + h(f.sha256) + '"><td class="l mono" style="white-space:normal">' + h(f.file_id) + '<br><span class="muted">' + h(f.filename) + '</span><br><span class="muted" style="font-size:11px">' + h(f.sha256.slice(0, 16)) + '…</span></td><td>' + mb(f.size) + '</td>' +
+            '<td class="l mono" style="font-size:11px">' + h((st.file_received || '–').replace('T', ' ').slice(0, 19)) + '</td><td class="l">' + stg(st.raw_stored, st.raw_stored === 'YES') + '</td>' +
+            '<td class="l">' + stg(st.sha256_verified, /^VERIFIED/.test(st.sha256_verified)) + '</td><td class="l" style="white-space:normal">' + stg(linked ? 'MANUAL' : 'NOT ENTERED', linked) + (linked ? '<br><span class="muted" style="font-size:11px">' + h(st.metadata.slice(8, -1)) + '</span>' : '') + '</td>' +
+            '<td class="l" style="white-space:normal">' + stg(st.container_format, /^PCAP$|^TEXT/.test(st.container_format)) + ' / ' + stg(st.csi_format) + (f.container ? '<br><span class="muted" style="font-size:11px">' + h(f.container.evidence) + '</span>' : '') + '</td>' +
+            '<td class="l">' + stg(st.csi_parse_status) + '</td><td>' + (linked ? '' : '<button class="btn small" data-link="' + h(f.sha256) + '" type="button">Create CSI record</button>') + '</td></tr>';
+        }).join('') + '</tbody></table></div>' : '') + '</div>';
     /* entry forms */
     html += '<h2>Record a measurement</h2><div class="flex" role="tablist">' + ['CSI', 'TDR', 'CLEGG'].map(function (t) { return '<button class="btn ' + (ui.tab === t ? '' : 'ghost') + ' small" data-tab="' + t + '" role="tab" aria-selected="' + (ui.tab === t) + '">' + (t === 'CLEGG' ? 'Clegg' : t) + '</button>'; }).join('') + '</div>' +
       '<form id="fRec" class="card" style="margin-top:8px" autocomplete="off">' + entryForm(ui.tab, s) + '</form>';
@@ -180,8 +193,13 @@
       (ev.unmatchedRefs.length ? '<p class="muted">Unmatched reference measurements (kept): ' + h(ev.unmatchedRefs.join(', ')) + '</p>' : '') +
       (ev.matchLog.length ? '<details id="fMatchLog"><summary class="muted">Matching log – every candidate with the reason it was accepted or rejected (' + ev.matchLog.length + ')</summary><div class="tablewrap"><table class="data"><thead><tr><th class="l">CSI</th><th class="l">Reference</th><th>Δt (min)</th><th>Distance (m)</th><th class="l">Decision</th><th class="l">Reason</th></tr></thead><tbody>' +
         ev.matchLog.map(function (e) { return '<tr><td class="l mono">' + h(e.csi) + '</td><td class="l mono">' + h(e.ref) + '</td><td>' + (e.dt_min === null ? '–' : e.dt_min.toFixed(1)) + '</td><td>' + (e.dist_m === null ? '–' : e.dist_m.toFixed(2)) + '</td><td class="l">' + (e.decision === 'accepted' ? '<span class="tag L">ACCEPTED</span>' : '<span class="tag H">REJECTED</span>') + '</td><td class="l" style="white-space:normal">' + h(e.reason) + '</td></tr>'; }).join('') + '</tbody></table></div></details>' : '');
+    /* traceability */
+    var tr = F.trace(s);
+    html += '<h2>Traceability</h2><p class="muted" style="margin-top:0">Original file → SHA-256 → measurement → session → logger configuration → TDR → Clegg → QC → archive. No prediction or calibration is produced.</p>' +
+      (tr.length ? '<div class="tablewrap"><table class="data" id="fTrace"><thead><tr><th class="l">File</th><th class="l">SHA-256</th><th class="l">Measurement</th><th class="l">Logger configuration (as entered)</th><th class="l">TDR</th><th class="l">Clegg</th><th class="l">QC</th><th class="l">CSI parse status</th><th class="l">Archive</th></tr></thead><tbody>' +
+        tr.map(function (r) { return '<tr><td class="l mono" style="white-space:normal">' + h(r.file_id || '–') + '<br><span class="muted">' + h(r.original_filename || '–') + '</span></td><td class="l mono" style="font-size:11px">' + h(r.sha256 ? r.sha256.slice(0, 12) + '… ' : '–') + '<br>' + h(r.sha256_verified) + '</td><td class="l mono">' + h(r.measurement_id) + '</td><td class="l" style="white-space:normal;font-size:12px;min-width:200px">' + h(r.logger || '–') + '</td><td class="l mono" style="white-space:normal">' + h(r.tdr_id || '–') + (r.tdr_match ? '<br><span class="muted">' + h(r.tdr_match + ' · ' + r.tdr_qc) + '</span>' : '') + '</td><td class="l mono" style="white-space:normal">' + h(r.clegg_id || '–') + (r.clegg_match ? '<br><span class="muted">' + h(r.clegg_match + ' · ' + r.clegg_qc) + '</span>' : '') + '</td><td class="l">' + (r.qc_status ? qcTag(r.qc_status) : '–') + '</td><td class="l">' + h(r.csi_parse_status) + '</td><td class="l" style="font-size:12px">' + h(r.archive) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p class="muted">No CSI records or raw files yet.</p>');
     /* export */
-    html += '<h2>Export</h2><div class="card"><div class="flex"><button class="btn" id="xCSV">CSV – measurements</button><button class="btn" id="xJSON">JSON – full metadata</button><button class="btn" id="xRep">Session report</button><button class="btn cyan" id="xZIP">ZIP package (all + raw files)</button></div>' +
+    html += '<h2>Export</h2><div class="card"><div class="flex"><button class="btn" id="xTrace">Traceability CSV</button><button class="btn" id="xCSV">CSV – measurements</button><button class="btn" id="xJSON">JSON – full metadata</button><button class="btn" id="xRep">Session report</button><button class="btn cyan" id="xZIP">ZIP package (all + raw files)</button></div>' +
       '<div class="flex" style="margin-top:8px"><button class="btn ghost small" id="xVerify" type="button">Verify stored raw files (re-hash)</button><span class="muted" style="font-size:12px" id="fVerifyOut">' + (ui.verify ? h(ui.verify) : '') + '</span></div>' +
       '<p class="muted" style="margin:8px 0 0">The ZIP export re-hashes every raw file and writes MANIFEST.json / MANIFEST.csv (file ID, measurement IDs, size, SHA-256, verification). Keep the ZIP in two places and open it once to confirm. The CSV includes superseded revisions and the QC result of every record; FAIL records are kept with their reason.</p></div>' + storagePanel();
     html += '<h2>Session metadata</h2><div class="card"><div class="grid g2"><div><h3>Configuration</h3><table class="data"><tbody>' +
@@ -202,7 +220,9 @@
       '<label>Operator<input type="text" name="operator_id" value="' + h(s.operator_id) + '" style="width:110px;min-width:0"></label></div>';
     var spec = '';
     if (type === 'CSI') {
-      spec = '<div class="controls"><label>Raw CSI file<input type="file" name="raw" id="fRaw"></label><label>or external raw reference<input type="text" name="raw_data_reference" placeholder="path / file name on the logger" style="min-width:240px"></label>' +
+      var unassigned = s.raw_files.filter(function (f) { return !F.current(s).some(function (r) { return r.record_type === 'CSI' && r.raw_sha256 === f.sha256; }) && !f.unavailable; });
+      spec = (unassigned.length ? '<div class="controls"><label>Raw file from logger intake<select name="intake_sha" id="fIntakeSel"><option value="">– none –</option>' + unassigned.map(function (f) { return '<option value="' + h(f.sha256) + '"' + (ui.intakeSel === f.sha256 ? ' selected' : '') + '>' + h(f.file_id + ' · ' + f.filename) + '</option>'; }).join('') + '</select></label></div>' : '') +
+        '<div class="controls"><label>Raw CSI file<input type="file" name="raw" id="fRaw"></label><label>or external raw reference<input type="text" name="raw_data_reference" placeholder="path / file name on the logger" style="min-width:240px"></label>' +
         '<label>Packet loss (%)<input type="number" name="packet_loss" min="0" max="100" step="0.01" style="width:100px;min-width:0"></label><label>Signal quality (RSSI dBm / note)<input type="text" name="signal_quality" style="width:150px;min-width:0"></label></div>' +
         '<details><summary class="muted">Device configuration for this record (defaults from the session)</summary><div class="controls" style="margin-top:8px">' +
         ['device_id', 'device_model', 'firmware_version', 'wifi_channel', 'bandwidth', 'subcarrier_count', 'window_duration'].map(function (k) { return '<label>' + k + '<input type="text" name="' + k + '" placeholder="' + h(s.device[k] || 'missing') + '" style="width:120px;min-width:0"></label>'; }).join('') + '</div></details>';
@@ -244,6 +264,10 @@
     } else if (type === 'TDR') { input.reference_vwc = val(form, 'reference_vwc'); input.reference_measurement_method = val(form, 'reference_measurement_method'); }
     else { input.reference_gmax = val(form, 'reference_gmax'); input.reference_measurement_method = val(form, 'reference_measurement_method'); }
     var file = type === 'CSI' && form.elements.raw && form.elements.raw.files[0];
+    var intakeSha = type === 'CSI' && form.elements.intake_sha ? form.elements.intake_sha.value : '';
+    if (file && intakeSha) { ui.msg = { kind: 'bad', text: 'Choose either a file from the logger intake or a new raw file, not both. Nothing was saved.' }; ui.retryFile = file; render(); return; }
+    if (intakeSha) { var inf = s.raw_files.filter(function (f) { return f.sha256 === intakeSha; })[0]; if (inf) { input.raw_sha256 = inf.sha256; input.raw_stored = true; input.raw_data_reference = F.rawRef(inf); } }
+    var receivedUtc = new Date().toISOString();
     var btn = $('#fSave', host); if (btn) { btn.disabled = true; btn.textContent = file ? 'Hashing and saving…' : 'Saving…'; }
     busy(1);
     /* 1. read and hash the original bytes (nothing is written yet) */
@@ -256,13 +280,15 @@
       /* 2. raw manifest + record + raw bytes in one atomic commit */
       return mutate(function (s) {
         if (raw) {
-          var r = F.addRawFile(s, { sha256: raw.sha, filename: file.name, size: file.size, type: file.type, last_modified: file.lastModified });
+          var r = F.addRawFile(s, { sha256: raw.sha, filename: file.name, size: file.size, type: file.type, last_modified: file.lastModified, received_utc: receivedUtc, container: F.inspectContainer(new Uint8Array(raw.buf)), source: 'record-form' });
           input.raw_sha256 = raw.sha; input.raw_stored = true; input.raw_data_reference = F.rawRef(r.file);
         }
         return F.addRecord(s, input, { allowDuplicate: !!allowDup });
       }, raws);
     }).then(function (rec) {
-      busy(-1); ui.retryFile = null;
+      return (rec.raw_sha256 && file ? recordVerify([rec.raw_sha256]) : Promise.resolve()).then(function () { return rec; });
+    }).then(function (rec) {
+      busy(-1); ui.retryFile = null; ui.intakeSel = null;
       try { localStorage.removeItem(draftKey(type)); } catch (x) { }
       var q = F.evaluate(s).current.filter(function (x) { return x.rec.measurement_id === rec.measurement_id; })[0].qc;
       ui.msg = { kind: q.status === 'PASS' ? 'info' : q.status === 'FAIL' ? 'bad' : '', text: rec.measurement_id + ' saved' + (file ? ' with raw file (SHA-256 ' + rec.raw_sha256.slice(0, 12) + '…)' : '') + ' · QC ' + q.status + (q.checks.length ? ' – ' + q.checks.map(function (c) { return c.message; }).join('; ') : '') };
@@ -322,9 +348,9 @@
   function enc(str) { return new TextEncoder().encode(str); }
   function exportFiles() {
     var s = ui.session, base = F.exportBase(s), now = new Date();
-    var names = [base + '_measurements.csv', base + '_session.json', base + '_report.html'];
+    var names = [base + '_measurements.csv', base + '_session.json', base + '_report.html', base + '_traceability.csv'];
     var rawNames = s.raw_files.map(F.rawZipPath);
-    return { base: base, names: names, rawNames: rawNames, now: now, csv: F.toCSV(s), json: F.toJSON(s, now), report: F.reportHTML(s, names.concat(rawNames, ['MANIFEST.json', 'MANIFEST.csv']), now) };
+    return { base: base, names: names, rawNames: rawNames, now: now, csv: F.toCSV(s), json: F.toJSON(s, now), trace: F.traceCSV(s), report: F.reportHTML(s, names.concat(rawNames, ['MANIFEST.json', 'MANIFEST.csv']), now) };
   }
   /* ZIP = CSV + JSON + report + every raw file that re-hashes correctly + MANIFEST.json/.csv.
      Missing or corrupted raw files are not packed; they are listed in the manifest and INTEGRITY_PROBLEMS.txt. */
@@ -332,7 +358,7 @@
     var s = ui.session, x = exportFiles(), btn = $('#xZIP', host);
     if (btn) { btn.disabled = true; btn.textContent = 'Verifying raw files…'; }
     busy(1);
-    var docs = [{ name: x.names[0], data: enc(x.csv) }, { name: x.names[1], data: enc(x.json) }, { name: x.names[2], data: enc(x.report) }];
+    var docs = [{ name: x.names[0], data: enc(x.csv) }, { name: x.names[1], data: enc(x.json) }, { name: x.names[2], data: enc(x.report) }, { name: x.names[3], data: enc(x.trace) }];
     var verdict = {}, rawEntries = [], problems = [];
     var chain = Promise.resolve();
     s.raw_files.forEach(function (f, i) {
@@ -371,12 +397,49 @@
   }
   function logExport(what) { act(function (s) { s.events.push({ time_utc: new Date().toISOString(), action: 'exported ' + what + ' (not a backup of raw files)', by: s.operator_id }); }); }
 
+  /* re-read stored bytes, re-hash, and record the result on the raw-file entry (bookkeeping only, not a data change) */
+  function recordVerify(shas) {
+    var s = ui.session, res = {}, chain = Promise.resolve();
+    shas.forEach(function (sha) { var f = s.raw_files.filter(function (x) { return x.sha256 === sha; })[0]; if (f) chain = chain.then(function () { return ST.verifyRaw(f).then(function (v) { res[sha] = { status: v.status, utc: new Date().toISOString(), reason: v.reason || '' }; }); }); });
+    return chain.then(function () { return mutate(function (s) { s.raw_files.forEach(function (f) { if (res[f.sha256]) f.verify = res[f.sha256]; }); }); }).then(function () { return res; });
+  }
+  function intakeFiles(list) {
+    var s = ui.session, out = [], chain = Promise.resolve(), o = $('#fIntakeOut', host);
+    busy(1);
+    list.forEach(function (file, i) {
+      chain = chain.then(function () {
+        var received = new Date().toISOString();
+        if (o) o.textContent = 'File ' + (i + 1) + ' of ' + list.length + ': reading and hashing ' + file.name + '…';
+        return file.arrayBuffer().then(function (buf) {
+          if (buf.byteLength !== file.size) throw new Error('read ' + buf.byteLength + ' of ' + file.size + ' B');
+          return ST.sha256(buf).then(function (sha) {
+            var ex = s.raw_files.filter(function (f) { return f.sha256 === sha; })[0];
+            if (ex && !ex.unavailable) { out.push(file.name + ': identical bytes already in this session as ' + ex.file_id + ' – not stored again'); return; }
+            var cont = F.inspectContainer(new Uint8Array(buf));
+            return mutate(function (s) {
+              var r = F.addRawFile(s, { sha256: sha, filename: file.name, size: file.size, type: file.type, last_modified: file.lastModified, received_utc: received, container: cont, source: 'logger-intake' });
+              s.events.push({ time_utc: new Date().toISOString(), action: 'logger intake ' + r.file.file_id + ' ' + file.name + ' (' + file.size + ' B, ' + cont.format + ')', by: s.operator_id });
+              return r.file;
+            }, [{ sha256: sha, session_id: s.session_id, filename: file.name, type: file.type, size: file.size, last_modified: file.lastModified, stored_utc: received, data: buf }])
+              .then(function (f) { return recordVerify([sha]).then(function (v) { out.push(f.file_id + ' ' + file.name + ': stored, re-hash ' + v[sha].status + ', container ' + cont.format + ', CSI not parsed'); }); });
+          });
+        }).catch(function (e) { out.push(file.name + ': NOT STORED – ' + e.message); });
+      });
+    });
+    chain.then(function () {
+      busy(-1);
+      var bad = out.filter(function (x) { return /NOT STORED|FAILED|MISSING|CORRUPTED/.test(x); });
+      ui.msg = { kind: bad.length ? 'bad' : 'info', text: 'Logger intake: ' + out.join(' · ') };
+      refreshDiag().then(render);
+    });
+  }
+
   function verifyStored() {
     var s = ui.session, out = { VERIFIED: 0, MISSING: [], CORRUPTED: [] }, chain = Promise.resolve();
     ui.verify = 'verifying…'; var o = $('#fVerifyOut', host); if (o) o.textContent = ui.verify;
     busy(1);
     s.raw_files.forEach(function (f) { chain = chain.then(function () { return ST.verifyRaw(f).then(function (v) { if (v.status === 'VERIFIED') out.VERIFIED++; else out[v.status].push((f.file_id || '') + ' ' + f.filename + ' (' + v.reason + ')'); }); }); });
-    chain.then(function () {
+    chain.then(function () { return recordVerify(s.raw_files.filter(function (f) { return !f.unavailable; }).map(function (f) { return f.sha256; })).catch(function () { }); }).then(function () {
       busy(-1);
       var n = s.raw_files.length;
       ui.verify = n ? out.VERIFIED + '/' + n + ' verified' + (out.MISSING.length ? ' · MISSING: ' + out.MISSING.join(', ') : '') + (out.CORRUPTED.length ? ' · CORRUPTED: ' + out.CORRUPTED.join(', ') : '') : 'no raw files stored';
@@ -489,6 +552,9 @@
     $('#xJSON', host).onclick = function () { var x = exportFiles(); download(x.names[1], x.json, 'application/json'); logExport('JSON'); };
     $('#xRep', host).onclick = function () { var x = exportFiles(); download(x.names[2], x.report, 'text/html;charset=utf-8'); logExport('report'); };
     $('#xZIP', host).onclick = exportZip;
+    $('#xTrace', host).onclick = function () { var x = exportFiles(); download(x.names[3], x.trace, 'text/csv;charset=utf-8'); logExport('traceability CSV'); };
+    var ib = $('#fIntake', host); if (ib) ib.onchange = function () { var l = Array.prototype.slice.call(ib.files); if (l.length) intakeFiles(l); };
+    $$('[data-link]', host).forEach(function (b) { b.onclick = function () { ui.tab = 'CSI'; ui.intakeSel = b.dataset.link; render(); var f = $('#fRec', host); if (f) f.scrollIntoView({ block: 'start' }); }; });
     $('#xVerify', host).onclick = verifyStored;
   }
 

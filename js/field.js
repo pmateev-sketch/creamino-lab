@@ -211,6 +211,9 @@
     s.counters.RAW = (s.counters.RAW || 0) + 1;
     var f = { file_id: 'RAW-' + s.session_id + '-' + pad(s.counters.RAW, 4), sha256: meta.sha256, filename: meta.filename || 'raw.bin', size: meta.size || 0,
       type: meta.type || '', last_modified: meta.last_modified || null, stored_utc: iso(now) };
+    if (meta.received_utc) f.received_utc = meta.received_utc;
+    if (meta.container) f.container = meta.container;
+    if (meta.source) f.source = meta.source;
     s.raw_files.push(f); F.touch(s);
     return { file: f, duplicate: false };
   };
@@ -442,6 +445,8 @@
     h += '<h2>Counts</h2><table><tr><th>Measurements (current)</th><td>' + M.measurements + '</td></tr><tr><th>CSI records</th><td>' + M.csi + '</td></tr><tr><th>Reference measurements</th><td>TDR ' + M.tdr + ' · Clegg ' + M.clegg + '</td></tr><tr><th>CSI–reference pairs</th><td>' + M.pairs_total + ' (valid ' + M.pairs_valid + ')</td></tr><tr><th>Raw CSI files stored</th><td>' + M.raw_files + '</td></tr><tr><th>Superseded revisions kept</th><td>' + M.revisions + '</td></tr></table>';
     h += '<h2>QC statistics</h2><table><tr><th>PASS</th><td>' + M.qc.PASS + '</td></tr><tr><th>WARNING</th><td>' + M.qc.WARNING + '</td></tr><tr><th>FAIL</th><td>' + M.qc.FAIL + '</td></tr><tr><th>INCOMPLETE</th><td>' + M.qc.INCOMPLETE + '</td></tr><tr><th>QC pass rate</th><td>' + pct(M.qc_pass_rate) + '</td></tr><tr><th>Data completeness</th><td>' + pct(M.completeness) + '</td></tr><tr><th>Missing session metadata</th><td>' + esc(M.session_missing.join(', ') || 'none') + '</td></tr></table>';
     h += '<h2>Incomplete or flagged records</h2>' + (inc.length ? '<table><tr><th>measurement_id</th><th>QC</th><th>Reasons</th></tr>' + inc.map(function (e) { return '<tr><td>' + esc(e.rec.measurement_id) + '</td><td>' + e.qc.status + '</td><td>' + esc(e.qc.checks.map(function (c) { return c.message; }).join('; ')) + '</td></tr>'; }).join('') + '</table>' : '<p>None.</p>');
+    var trc = F.trace(s);
+    h += '<h2>Traceability</h2>' + (trc.length ? '<table><tr><th>File</th><th>SHA-256</th><th>Measurement</th><th>Logger configuration</th><th>TDR</th><th>Clegg</th><th>QC</th><th>CSI parse status</th><th>Archive</th></tr>' + trc.map(function (r) { return '<tr><td>' + esc((r.file_id || '–') + ' ' + (r.original_filename || '')) + '</td><td style="font-family:monospace;font-size:11px">' + esc(r.sha256 || '–') + '<br>' + esc(r.sha256_verified) + '</td><td>' + esc(r.measurement_id) + '</td><td style="font-size:12px">' + esc(r.logger || '–') + '</td><td>' + esc(r.tdr_id ? r.tdr_id + ' (' + r.tdr_match + ')' : '–') + '</td><td>' + esc(r.clegg_id ? r.clegg_id + ' (' + r.clegg_match + ')' : '–') + '</td><td>' + esc(r.qc_status || '–') + '</td><td>' + esc(r.csi_parse_status) + '</td><td>' + esc(r.archive) + '</td></tr>'; }).join('') + '</table>' : '<p>No CSI records or raw files.</p>');
     h += '<h2>Limitations</h2><ul><li>No locally validated CSI model exists for this site: no CSI-derived VWC, Gmax or SRS values are produced, and no operational recommendations are given.</li><li>Records flagged FAIL are kept unchanged with their reason; they must be reviewed before any use.</li><li>Data are stored locally in this browser (IndexedDB) until exported; export after every session.</li><li>Pairing (one-to-one) uses the same grid cell, ≤ ' + s.qc_thresholds.match_max_dt_min + ' min and ≤ ' + s.qc_thresholds.match_max_dist_m + ' m computed from x/y of both records; pairs without coordinates are rejected, ambiguous pairs are flagged and not counted as valid.</li><li>No CSI parser is implemented: CSI metadata are entered manually and raw files are stored unparsed.</li><li>Browser storage is not a backup; only a verified ZIP kept outside the device is.</li></ul>';
     h += '<h2>Files and data</h2><ul>' + (files || []).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul><table><tr><th>Raw file</th><th>Size</th><th>SHA-256</th></tr>' + (s.raw_files.length ? s.raw_files.map(function (f) { return '<tr><td>' + esc((f.file_id ? f.file_id + ' · ' : '') + f.filename) + (f.unavailable ? ' – <b>' + esc(f.unavailable) + '</b>' : '') + '</td><td>' + f.size + ' B</td><td style="font-family:monospace;font-size:11px">' + esc(f.sha256) + '</td></tr>'; }).join('') : '<tr><td colspan="3">No raw files stored</td></tr>') + '</table>';
     h += '<p style="color:#777;font-size:12px">Generated ' + esc(iso(now)) + ' · ' + esc(F.SCHEMA_VERSION) + '</p></body></html>';
@@ -479,6 +484,89 @@
     return out;
   };
 
+  /* ---------- logger file intake ----------
+     Container inspection reads only standardised container signatures (libpcap, pcapng, gzip, zip, plain text).
+     It does NOT decode CSI. csi_format stays NOT_IDENTIFIED and csi_parse_status NOT_PARSED until a parser,
+     written against real logger files, has extracted and validated the contents. */
+  F.inspectContainer = function (u8) {
+    var n = u8.length, out = { format: 'UNKNOWN', evidence: '', checked_bytes: n };
+    if (!n) { out.format = 'EMPTY'; out.evidence = 'file has 0 bytes'; return out; }
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), m = n >= 4 ? dv.getUint32(0, false) : 0;
+    var pcapMagic = { 0xa1b2c3d4: [false, 'us'], 0xd4c3b2a1: [true, 'us'], 0xa1b23c4d: [false, 'ns'], 0x4d3cb2a1: [true, 'ns'] };
+    if (pcapMagic[m] && n >= 24) {
+      var le = pcapMagic[m][0], res = pcapMagic[m][1];
+      var p = { format: 'PCAP', byte_order: le ? 'little-endian' : 'big-endian', ts_resolution: res,
+        version: dv.getUint16(4, le) + '.' + dv.getUint16(6, le), snaplen: dv.getUint32(16, le), linktype: dv.getUint32(20, le),
+        packets: 0, truncated_tail_bytes: 0, snapped_packets: 0, oversize_packets: 0, first_ts: null, last_ts: null, non_monotonic: 0, checked_bytes: n };
+      var off = 24, prev = -Infinity, div = res === 'ns' ? 1e9 : 1e6;
+      while (off + 16 <= n) {
+        var sec = dv.getUint32(off, le), frac = dv.getUint32(off + 4, le), incl = dv.getUint32(off + 8, le), orig = dv.getUint32(off + 12, le);
+        if (off + 16 + incl > n) { p.truncated_tail_bytes = n - off; break; }
+        var t = sec + frac / div;
+        if (p.first_ts === null) p.first_ts = t; if (t < prev) p.non_monotonic++; prev = t; p.last_ts = t;
+        if (incl < orig) p.snapped_packets++; if (incl > p.snaplen) p.oversize_packets++;
+        p.packets++; off += 16 + incl;
+      }
+      if (off < n && !p.truncated_tail_bytes) p.truncated_tail_bytes = n - off;
+      p.structure_ok = p.truncated_tail_bytes === 0 && p.oversize_packets === 0;
+      p.first_ts_utc = p.first_ts === null ? null : new Date(p.first_ts * 1000).toISOString();
+      p.last_ts_utc = p.last_ts === null ? null : new Date(p.last_ts * 1000).toISOString();
+      p.evidence = 'libpcap magic 0x' + m.toString(16) + ', v' + p.version + ', linktype ' + p.linktype + ', snaplen ' + p.snaplen + ', ' + p.packets + ' packet records' + (p.truncated_tail_bytes ? ', LAST RECORD TRUNCATED (' + p.truncated_tail_bytes + ' B)' : '') + (p.non_monotonic ? ', ' + p.non_monotonic + ' non-monotonic timestamps' : '');
+      return p;
+    }
+    if (m === 0x0a0d0d0a) { out.format = 'PCAPNG'; out.evidence = 'pcapng section header block; block structure not walked by this module'; return out; }
+    if (n >= 2 && u8[0] === 0x1f && u8[1] === 0x8b) { out.format = 'GZIP'; out.evidence = 'gzip signature 1f8b; contents not inspected'; return out; }
+    if (m === 0x504b0304) { out.format = 'ZIP'; out.evidence = 'zip local header signature; contents not inspected'; return out; }
+    var k = Math.min(n, 65536), ctl = 0, nul = 0;
+    for (var i = 0; i < k; i++) { var c = u8[i]; if (c === 0) nul++; else if (c < 9 || (c > 13 && c < 32)) ctl++; }
+    if (!nul && ctl / k < 0.01) {
+      var txt = utf8dec(u8.subarray(0, Math.min(n, 4096))), lines = txt.split(/\r?\n/), first = lines[0] || '';
+      var delim = [',', ';', '\t', ' '].map(function (d) { return [d, first.split(d).length]; }).sort(function (a, b) { return b[1] - a[1]; })[0];
+      out.format = delim[1] > 2 ? 'TEXT_DELIMITED' : 'TEXT';
+      out.evidence = 'no NUL bytes in first ' + k + ' B' + (delim[1] > 2 ? ', first line has ' + delim[1] + ' fields separated by "' + (delim[0] === '\t' ? '\\t' : delim[0]) + '"' : '') + '; first line: ' + JSON.stringify(first.slice(0, 120));
+      return out;
+    }
+    out.evidence = 'no known container signature (first bytes ' + Array.prototype.slice.call(u8.subarray(0, 8)).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join(' ') + ')';
+    return out;
+  };
+  /* six separate intake stages per raw file; nothing is inferred from another stage */
+  F.intakeState = function (s, f) {
+    var recs = F.current(s).filter(function (r) { return r.record_type === 'CSI' && r.raw_sha256 === f.sha256; });
+    return {
+      file_received: f.received_utc || f.stored_utc || null,
+      raw_stored: f.unavailable ? 'NO – ' + f.unavailable : 'YES',
+      sha256_verified: f.verify ? f.verify.status + ' ' + f.verify.utc : 'NOT YET RE-HASHED',
+      metadata: recs.length ? 'MANUAL (' + recs.map(function (r) { return r.measurement_id; }).join(', ') + ')' : 'NOT ENTERED – file not linked to a CSI record',
+      container_format: f.container ? f.container.format : 'NOT INSPECTED',
+      csi_format: 'NOT_IDENTIFIED',
+      csi_parse_status: 'NOT_PARSED'
+    };
+  };
+  /* traceability: file → SHA-256 → measurement → session → logger config → TDR → Clegg → QC → archive */
+  F.trace = function (s) {
+    var ev = F.evaluate(s), qc = {}; ev.current.forEach(function (e) { qc[e.rec.measurement_id] = e.qc.status; });
+    var b = s.backup || {}, covered = !!b.last_zip_utc && (s.change_seq || 0) === (b.change_seq_at_zip || 0);
+    var byPair = function (id, type) { return ev.pairs.filter(function (p) { return p.csi === id && p.type === type; })[0] || null; };
+    var rows = F.current(s).filter(function (r) { return r.record_type === 'CSI'; }).map(function (r) {
+      var f = r.raw_sha256 ? s.raw_files.filter(function (x) { return x.sha256 === r.raw_sha256; })[0] : null;
+      var t = byPair(r.measurement_id, 'TDR'), c = byPair(r.measurement_id, 'CLEGG');
+      return { file_id: f ? f.file_id : '', original_filename: f ? f.filename : (r.raw_data_reference || ''), sha256: r.raw_sha256 || '',
+        sha256_verified: f && f.verify ? f.verify.status : (f ? 'NOT YET RE-HASHED' : 'NO STORED FILE'), container_format: f && f.container ? f.container.format : '',
+        measurement_id: r.measurement_id, session_id: s.session_id, timestamp_utc: r.timestamp_utc,
+        logger: ['device_id', 'device_model', 'firmware_version', 'wifi_channel', 'bandwidth', 'subcarrier_count', 'window_duration'].map(function (k) { return k + '=' + (blank(r[k]) ? '?' : r[k]); }).join('; '),
+        tdr_id: t ? t.ref : '', tdr_match: t ? (t.ambiguous ? 'AMBIGUOUS' : 'unique') + ' Δt ' + t.dt_min.toFixed(1) + ' min, ' + t.dist_m.toFixed(2) + ' m' : '',
+        clegg_id: c ? c.ref : '', clegg_match: c ? (c.ambiguous ? 'AMBIGUOUS' : 'unique') + ' Δt ' + c.dt_min.toFixed(1) + ' min, ' + c.dist_m.toFixed(2) + ' m' : '',
+        qc_status: qc[r.measurement_id], tdr_qc: t ? qc[t.ref] : '', clegg_qc: c ? qc[c.ref] : '',
+        csi_parse_status: 'NOT_PARSED', archive: b.last_zip_utc ? b.last_zip_utc + (covered ? '' : ' (outdated)') + (b.verified === false ? ' (incomplete)' : '') : 'NOT ARCHIVED' };
+    });
+    s.raw_files.forEach(function (f) {
+      if (!rows.some(function (x) { return x.sha256 === f.sha256; })) rows.push({ file_id: f.file_id, original_filename: f.filename, sha256: f.sha256, sha256_verified: f.verify ? f.verify.status : 'NOT YET RE-HASHED', container_format: f.container ? f.container.format : '', measurement_id: '(unassigned)', session_id: s.session_id, timestamp_utc: '', logger: '', tdr_id: '', tdr_match: '', clegg_id: '', clegg_match: '', qc_status: '', tdr_qc: '', clegg_qc: '', csi_parse_status: 'NOT_PARSED', archive: b.last_zip_utc ? b.last_zip_utc + (covered ? '' : ' (outdated)') : 'NOT ARCHIVED' });
+    });
+    return rows;
+  };
+  F.TRACE_COLS = ['file_id', 'original_filename', 'sha256', 'sha256_verified', 'container_format', 'measurement_id', 'session_id', 'timestamp_utc', 'logger', 'tdr_id', 'tdr_match', 'tdr_qc', 'clegg_id', 'clegg_match', 'clegg_qc', 'qc_status', 'csi_parse_status', 'archive'];
+  F.traceCSV = function (s) { return '﻿' + F.TRACE_COLS.join(',') + '\n' + F.trace(s).map(function (r) { return F.TRACE_COLS.map(function (k) { return csvCell(r[k]); }).join(','); }).join('\n') + '\n'; };
+
   /* ---------- ZIP reading (store method only – the method this module writes) ----------
      Every entry is checked against its CRC-32 and size; nothing is accepted silently. */
   function utf8dec(u) { if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(u); return Buffer.from(u).toString('utf8'); }
@@ -515,7 +603,7 @@
     var cur = s.records;
     var files = s.raw_files.map(function (f) {
       return { file_id: f.file_id, measurement_ids: cur.filter(function (r) { return r.raw_sha256 === f.sha256; }).map(function (r) { return r.measurement_id + (r.revision > 1 ? '@r' + r.revision : ''); }),
-        original_filename: f.filename, zip_path: verify[f.sha256] === 'VERIFIED' ? F.rawZipPath(f) : null, size: f.size, sha256: f.sha256, mime: f.type || '',
+        container_format: f.container ? f.container.format : null, original_filename: f.filename, zip_path: verify[f.sha256] === 'VERIFIED' ? F.rawZipPath(f) : null, size: f.size, sha256: f.sha256, mime: f.type || '',
         last_modified: f.last_modified || null, stored_utc: f.stored_utc, verification: verify[f.sha256] || 'MISSING' };
     });
     var bad = files.filter(function (f) { return f.verification !== 'VERIFIED'; });
