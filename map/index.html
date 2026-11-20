@@ -2,7 +2,7 @@
 <html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Creamino™ Карта на спортните терени в България</title>
 <meta name="description" content="Тревни терени, ски писти и открити води в България с геолокация и сателитен индекс на състоянието (Sentinel-2). Point Surface · Creamino™.">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="manifest" href="../me/manifest.json"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f7f2;--panel:#fff;--ink:#0e1c15;--mute:#5b6b62;--line:#dfe7dc;--A:#138a45;--B:#7cbf3c;--C:#e3b52b;--D:#d0602a;--N:#9aa59e;--ref:#e0a80b;--snow:#2a8fd6;--nosnow:#b9a07a;--trk:#c2412d;--S:#0b6fb8}
@@ -36,7 +36,8 @@ li:hover{background:var(--bg)}li .t{flex:1}li small{display:block;color:var(--mu
 .tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:10px;background:var(--ref);color:#1a1300;margin:3px 0}
 footer{font-size:12px;color:var(--mute);padding:8px 16px;background:#fff;border-top:1px solid var(--line)}
 button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{outline:3px solid var(--ref);outline-offset:2px}
-@media(max-width:860px){main{grid-template-columns:minmax(0,1fr);grid-template-rows:60vh auto}aside{border-left:0;border-top:1px solid var(--line);overflow:visible}ul{max-height:50vh}}
+@media(max-width:600px){header{padding:8px 10px;gap:6px}header b{font-size:15px}header>a[href*='pointsurface.com/creamino']{display:none}.tabs{flex-wrap:nowrap;overflow-x:auto;margin-left:0;width:100%;scrollbar-width:none}.tab{flex:none;min-height:38px;padding:0 12px;font-size:13px}}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr);grid-template-rows:68vh auto}aside{border-left:0;border-top:1px solid var(--line);overflow:visible}ul{max-height:50vh}}
 </style></head><body>
 <header><b>Ω Creamino™ · Карта на спортните терени</b><a href="https://pointsurface.com/creamino/">Point Surface</a>
 <div class="tabs" role="tablist"><button class="tab" data-v="turf" aria-selected="true">Тревни терени</button><button class="tab" data-v="piste" aria-selected="false">Ски писти</button><button class="tab" data-v="water" aria-selected="false">Открити води</button><button class="tab" data-v="active" aria-selected="false">Активни места</button></div></header>
@@ -157,5 +158,6 @@ fetch('hist.json').then(r=>r.json()).then(h=>{H=h}).catch(()=>{});
 fetch('data.json').then(r=>r.json()).then(d=>{D=d;attachLeagues();const h=location.hash.slice(1);setView(V[h]?h:'turf')});
 }
 </script>
+<script>if(matchMedia("(display-mode: standalone)").matches||navigator.standalone){const h=document.querySelector("header");if(h){const b=document.createElement("a");b.href="../me/?app=1";b.textContent="← Creamino Me";b.style.cssText="color:#bfe8a6;font-weight:700;margin-right:10px;text-decoration:none";h.prepend(b)}}</script>
 <script>window.CREAMINO_SB={url:'https://pcjcqzyfbxefiqppyxkn.supabase.co',key:'sb_publishable_XZYmFqcQkGs0POvsjikdmg_r2DjcdMj'};</script>
 <script src="community.js"></script></body></html>

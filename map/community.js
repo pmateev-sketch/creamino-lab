@@ -7,7 +7,7 @@ const ACTV={run:'Бягане',walk:'Ходене',bike:'Колело',workout:'
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const css=document.createElement('style');css.textContent=`
 #cbtn{position:absolute;right:12px;bottom:28px;z-index:900;min-height:48px;padding:0 18px;border-radius:24px;border:0;background:#0b1a14;color:#fff;font:700 15px inherit;box-shadow:0 2px 8px #0005;cursor:pointer}
-#cdlg{position:absolute;right:12px;bottom:84px;z-index:901;width:min(340px,calc(100% - 24px));background:#fff;border-radius:14px;box-shadow:0 4px 20px #0004;padding:14px;display:none;font-size:14px}
+#cdlg{position:absolute;right:12px;bottom:84px;z-index:901;width:min(340px,calc(100% - 24px));max-height:calc(100% - 100px);overflow:auto;background:#fff;border-radius:14px;box-shadow:0 4px 20px #0004;padding:14px;display:none;font-size:14px}
 #cdlg h3{margin:0 0 8px;font-size:16px}#cdlg .row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 #cdlg button.o{min-height:40px;padding:0 12px;border-radius:10px;border:1px solid #dfe7dc;background:#f4f7f2;font:inherit;cursor:pointer}
 #cdlg button.o[aria-pressed=true]{background:#0b1a14;color:#fff}#cdlg .go{background:#138a45;color:#fff;border:0;min-height:44px;border-radius:10px;width:100%;font:700 15px inherit;margin-top:6px;cursor:pointer}
@@ -22,7 +22,7 @@ if(!CFG.url||!CFG.key){async function mod(){dlg.innerHTML='<h3>Модераци�
  const P=p.data||[],R=r.data||[];const day=t=>new Date(t).toLocaleDateString('bg');
  dlg.innerHTML=`<h3>Модерация</h3><b>Нови места (${P.length})</b>${P.map(x=>`<div style="border-top:1px solid #eee;padding:6px 0"><b>${esc(x.name)}</b> <small style="display:inline">${PK[x.kind]||''} · ${day(x.created_at)}</small>${x.note?`<div>${esc(x.note)}</div>`:''}<div class="row"><button class="o" data-go="${x.lat},${x.lon}">Покажи</button><button class="o" data-ok="${x.id}">Одобри</button><button class="o" data-no="${x.id}">Откажи</button></div></div>`).join('')||'<small>Няма чакащи.</small>'}
  <b style="display:block;margin-top:8px">Активни сигнали (${R.length})</b>${R.map(x=>`<div style="border-top:1px solid #eee;padding:6px 0">${(KIND[x.kind]||KIND.other)[1]} ${(KIND[x.kind]||KIND.other)[0]} <small style="display:inline">${day(x.created_at)}</small>${x.note?`<div>${esc(x.note)}</div>`:''}<div class="row"><button class="o" data-go="${x.lat},${x.lon}">Покажи</button><button class="o" data-hide="${x.id}">Скрий</button></div></div>`).join('')||'<small>Няма активни.</small>'}<button class="o" id="cback" style="margin-top:8px;width:100%">Назад</button>`;
- dlg.style.maxHeight='70vh';dlg.style.overflow='auto';dlg.querySelector('#cback').onclick=()=>{dlg.style.maxHeight='';form()};
+ dlg.querySelector('#cback').onclick=form;
  dlg.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const[a,o]=b.dataset.go.split(',').map(Number);map.setView([a,o],17)});
  const act=(q,b)=>q.then(({error})=>{b.parentElement.outerHTML=`<small>${error?'Грешка: '+esc(error.message):'Готово.'}</small>`;if(!error)load()});
  dlg.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>act(sb.from('places').update({status:'approved'}).eq('id',b.dataset.ok),b));
@@ -68,11 +68,12 @@ async function mod(){dlg.innerHTML='<h3>Модерация</h3>Зареждам�
  const P=p.data||[],R=r.data||[];const day=t=>new Date(t).toLocaleDateString('bg');
  dlg.innerHTML=`<h3>Модерация</h3><b>Нови места (${P.length})</b>${P.map(x=>`<div style="border-top:1px solid #eee;padding:6px 0"><b>${esc(x.name)}</b> <small style="display:inline">${PK[x.kind]||''} · ${day(x.created_at)}</small>${x.note?`<div>${esc(x.note)}</div>`:''}<div class="row"><button class="o" data-go="${x.lat},${x.lon}">Покажи</button><button class="o" data-ok="${x.id}">Одобри</button><button class="o" data-no="${x.id}">Откажи</button></div></div>`).join('')||'<small>Няма чакащи.</small>'}
  <b style="display:block;margin-top:8px">Активни сигнали (${R.length})</b>${R.map(x=>`<div style="border-top:1px solid #eee;padding:6px 0">${(KIND[x.kind]||KIND.other)[1]} ${(KIND[x.kind]||KIND.other)[0]} <small style="display:inline">${day(x.created_at)}</small>${x.note?`<div>${esc(x.note)}</div>`:''}<div class="row"><button class="o" data-go="${x.lat},${x.lon}">Покажи</button><button class="o" data-hide="${x.id}">Скрий</button></div></div>`).join('')||'<small>Няма активни.</small>'}<button class="o" id="cback" style="margin-top:8px;width:100%">Назад</button>`;
- dlg.style.maxHeight='70vh';dlg.style.overflow='auto';dlg.querySelector('#cback').onclick=()=>{dlg.style.maxHeight='';form()};
+ dlg.querySelector('#cback').onclick=form;
  dlg.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const[a,o]=b.dataset.go.split(',').map(Number);map.setView([a,o],17)});
  const act=(q,b)=>q.then(({error})=>{b.parentElement.outerHTML=`<small>${error?'Грешка: '+esc(error.message):'Готово.'}</small>`;if(!error)load()});
  dlg.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>act(sb.from('places').update({status:'approved'}).eq('id',b.dataset.ok),b));
  dlg.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>act(sb.from('places').update({status:'rejected'}).eq('id',b.dataset.no),b));
  dlg.querySelectorAll('[data-hide]').forEach(b=>b.onclick=()=>act(sb.from('reports').update({hidden:true}).eq('id',b.dataset.hide),b))}
 btn.onclick=()=>{const open=dlg.style.display!=='block';dlg.style.display=open?'block':'none';if(open)menu()};
+if(/[?&]add=1/.test(location.search)){const t=setInterval(()=>{if(sb){clearInterval(t);setTimeout(()=>btn.click(),400)}},200);setTimeout(()=>clearInterval(t),10000)}
 })();
