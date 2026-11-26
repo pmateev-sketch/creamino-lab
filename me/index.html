@@ -7,16 +7,16 @@
 <meta name="theme-color" content="#0c2730">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Creamino">
+<meta name="apple-mobile-web-app-title" content="VAYSHA">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
-<title>Creamino Me – приложение за спортиста</title>
+<title>VAYSHA Me – приложение за спортиста</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=cyrillic" rel="stylesheet">
 <style>
 :root{
-  /* Creamino Me: тъмен петролен свят + тюркоаз; телефон в центъра, обяснение вдясно */
+  /* VAYSHA Me: тъмен петролен свят + тюркоаз; телефон в центъра, обяснение вдясно */
   --bg:#071c23; --phone:#0c2730; --card:#123844; --card2:#174654; --line:rgba(63,211,216,.2);
   --text:#e9f4f5; --muted:#9fbcc1; --accent:#3fd3d8; --gold:#d4a72c;
   --ok:#3ccf8e; --warn:#f2b84b; --crit:#ef5b5b;
@@ -128,10 +128,10 @@ body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:non
 </style>
 </head>
 <body>
-<div class="demo">ДЕМО ПРОТОТИП · SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED · NOT LIVE STADIUM DATA<br>Примерни данни · автоматичните аларми и известия са планирана функция · не е медицинско изделие · <a href="../" style="color:inherit;font-weight:700">← Creamino Lab</a></div>
+<div class="demo">ДЕМО ПРОТОТИП · SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED · NOT LIVE STADIUM DATA<br>Примерни данни · автоматичните аларми и известия са планирана функция · не е медицинско изделие · <a href="../" style="color:inherit;font-weight:700">← VAYSHA Lab</a></div>
 <div class="stage">
   <div class="intro">
-    <div class="brand"><span class="omega">Ω</span><div><b>Creamino Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
+    <div class="brand"><span class="omega">Ω</span><div><b>VAYSHA Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
     <h1>Терена под краката ти – в телефона и таблета.</h1>
     <div class="who" id="who" aria-label="Избери профил"></div>
   </div>
@@ -141,7 +141,7 @@ body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:non
       <div class="screen" id="screen2"></div>
       <nav class="tabbar" id="tabbar2" aria-label="Раздели на таблета"></nav>
     </div>
-    <div class="phone" id="phoneDev" aria-label="Приложение Creamino Me">
+    <div class="phone" id="phoneDev" aria-label="Демо приложение VAYSHA Me">
       <div class="notch"></div>
       <div class="status"><span id="clock">17:24</span><span>5G ▮▮▮ 86%</span></div>
       <div class="toast" id="toast" role="alert"></div>
@@ -281,13 +281,13 @@ function mapScreen(){const pts=SITES.map(s=>{const[x,y]=proj(s.lon,s.lat);return
  <div class="seg"><button aria-pressed="true">Риск</button><button aria-pressed="false">Сателит NDMI</button><button aria-pressed="false">CRIO машини</button></div>
  <div class="map"><svg viewBox="0 0 350 230" role="img" aria-label="Карта на България с терените в платформата"><defs><linearGradient id="sea" x1="0" x2="1"><stop offset="0" stop-color="#0a222a"/><stop offset="1" stop-color="#0d3440"/></linearGradient></defs><rect width="350" height="230" fill="#0b2a33"/><polygon points="${poly}" fill="#174654" stroke="#3fd3d8" stroke-width="1.3" stroke-linejoin="round"/><text x="322" y="150" font-size="9" fill="#3fd3d8" opacity=".6" transform="rotate(90 322 150)">Черно море</text>${real}${cities}${mach}${pts}</svg></div>
  <div class="card" style="padding:10px 12px"><div class="between"><span class="eyebrow">Реални терени от сателита</span><span class="pill" style="--c:var(--accent)">${(window.REAL||[]).length||'…'}</span></div><p class="muted" style="margin:4px 0 6px">Малките точки са всички тревни терени в България, оценени по Sentinel-2 (A–D, данни към ${window.REAL_ASOF||'–'}). Големите са примерните терени на демото.</p><div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn sm" href="../map/" style="display:inline-block;text-decoration:none">Пълна карта</a><a class="btn sm" href="../map/?add=1" style="display:inline-block;text-decoration:none">＋ Сигнал / спортувах тук</a><a class="btn sm" href="../map/#active" style="display:inline-block;text-decoration:none">Активни места</a></div></div>
- <div class="row muted" style="gap:14px;flex-wrap:wrap"><span><span class="pill" style="--c:var(--ok)">●</span> нисък</span><span><span class="pill" style="--c:var(--warn)">●</span> повишен</span><span><span class="pill" style="--c:var(--crit)">●</span> висок</span><span style="color:var(--accent);font-weight:800">Ω</span> с Creamino <span><span class="pill" style="--c:var(--gold)">▮</span> CRIO</span></div>
- <div class="list" id="sitelist">${SITES.map(s=>`<button class="li" data-site="${s.id}" style="border:0;text-align:left;width:100%"><span class="ico" style="background:${riskC[s.risk]}22;color:${riskC[s.risk]}">${svg('pin')}</span><div style="flex:1"><b>${s.n}</b><div class="muted">${s.city} · ${s.type}${s.creamino?' · Creamino':' · само сателит'}</div></div><span class="pill" style="--c:${riskC[s.risk]}">${riskT[s.risk]}</span></button>`).join('')}</div>
+ <div class="row muted" style="gap:14px;flex-wrap:wrap"><span><span class="pill" style="--c:var(--ok)">●</span> нисък</span><span><span class="pill" style="--c:var(--warn)">●</span> повишен</span><span><span class="pill" style="--c:var(--crit)">●</span> висок</span><span style="color:var(--accent);font-weight:800">Ω</span> с VAYSHA <span><span class="pill" style="--c:var(--gold)">▮</span> CRIO</span></div>
+ <div class="list" id="sitelist">${SITES.map(s=>`<button class="li" data-site="${s.id}" style="border:0;text-align:left;width:100%"><span class="ico" style="background:${riskC[s.risk]}22;color:${riskC[s.risk]}">${svg('pin')}</span><div style="flex:1"><b>${s.n}</b><div class="muted">${s.city} · ${s.type}${s.creamino?' · VAYSHA':' · само сателит'}</div></div><span class="pill" style="--c:${riskC[s.risk]}">${riskT[s.risk]}</span></button>`).join('')}</div>
  <p class="muted" style="margin:0">Терените с Ω имат Wi-Fi сензориране и полеви измервания; останалите – сателитен индекс на влагата (NDMI, Sentinel-2) с по-ниска точност.</p>`}
 function siteCard(id){const s=SITES.find(x=>x.id===id);
  return header(s.n,s.city+' · '+s.type,1)+`
  <div class="card ${s.risk==='H'?'crit':s.risk==='M'?'alert':''}"><div class="between"><span class="eyebrow">Днес</span><span class="pill" style="--c:${riskC[s.risk]}">SRS ${s.srs.toFixed(2)} · ${riskT[s.risk]}</span></div>${s.id==='bsr'?golfMini():s.run?runMini(s.id):pitchMini(s.risk!=='L')}
- ${s.run?runGrid(s):''}<div class="grid2" style="margin-top:10px;${s.run?'display:none':''}"><div><div class="muted">Твърдост</div><div class="big">${s.gmax??'—'}<small style="font-size:13px"> g</small></div></div><div><div class="muted">Влажност</div><div class="big">${s.vwc??'—'}<small style="font-size:13px"> %</small></div></div><div><div class="muted">Сателит NDMI</div><div class="big">${s.ndmi}</div></div><div><div class="muted">Източник</div><div style="font-weight:700;margin-top:6px">${s.creamino?'Creamino Wi-Fi + TDR/Clegg':'Sentinel-2'}</div></div></div></div>
+ ${s.run?runGrid(s):''}<div class="grid2" style="margin-top:10px;${s.run?'display:none':''}"><div><div class="muted">Твърдост</div><div class="big">${s.gmax??'—'}<small style="font-size:13px"> g</small></div></div><div><div class="muted">Влажност</div><div class="big">${s.vwc??'—'}<small style="font-size:13px"> %</small></div></div><div><div class="muted">Сателит NDMI</div><div class="big">${s.ndmi}</div></div><div><div class="muted">Източник</div><div style="font-weight:700;margin-top:6px">${s.creamino?'VAYSHA Wi-Fi + TDR/Clegg':'Sentinel-2'}</div></div></div></div>
  <div class="card"><span class="eyebrow">Качество и прогнозен риск · 2017–2026</span>${HK[s.id]&&window.HIST&&window.HIST[HK[s.id]]?histSVG(window.HIST[HK[s.id]]):`<p class="muted" style="margin:6px 0 0">${HK[s.id]?'Зареждам историята…':s.run?'Историята по години се смята за тревните терени. За парковете предстои.':'Няма сателитна история за този обект (малък терен или демо обект).'}</p>`}</div>
  <div class="row" style="gap:8px"><button class="btn" data-tab="home">Тренирам тук</button><button class="btn ghost" data-tab="map">← Карта</button></div>`}
 function cupSVG(name,num,sponsor){return`<svg viewBox="0 0 160 200" style="width:170px;height:auto;flex:none" role="img" aria-label="Брандирана чаша"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#0c2730"/><stop offset=".5" stop-color="#174654"/><stop offset="1" stop-color="#0c2730"/></linearGradient></defs>
@@ -326,13 +326,13 @@ function runScreen(){return header('Движение','Как повърхнос
  <div class="card light"><span class="eyebrow">Последните 7 дни · 42 км</span>${surfaces(true)}</div>
  <div class="card alert"><span class="eyebrow" style="color:var(--warn)">Анализ на движението</span><p style="margin:6px 0 4px"><b>На асфалт крачката ти се скъсява с 6 % след 8-ия км</b></p><p class="muted" style="margin:0">каданс 168 → 176 · вертикално трептене +9 % · признак на умора в прасците</p></div>
  <div class="card"><span class="eyebrow">Препоръка</span><div class="list" style="margin-top:8px"><div class="li"><span class="ico">${svg('run')}</span><div><b>Утре: 8 км по трева/пътека</b><div class="muted">по-нисък удар, повече стабилизация</div></div></div><div class="li"><span class="ico">${svg('boot')}</span><div><b>Обувки с повече амортисьор за асфалт</b><div class="muted">текущите: 640 км – време за смяна</div></div></div><div class="li"><span class="ico">${svg('cup')}</span><div><b>Recovery Vegan до 30 мин след бягане</b><div class="muted">най-близка CRIO машина: 1.3 км</div></div></div></div></div>
- <p class="muted" style="margin:0">Данни от часовника (GPS, каданс, крачка) + карта на повърхностите от сателита и Creamino.</p>`}
+ <p class="muted" style="margin:0">Данни от часовника (GPS, каданс, крачка) + карта на повърхностите от сателита и VAYSHA.</p>`}
 function profile(){const P=PERSONAS[who];return header('Профил','Отбор, спонсор и поверителност')+`
  <div class="card light"><div class="row"><span class="av" style="width:54px;height:54px;font-size:22px">${P.init}</span><div><h3 style="font-size:18px">${P.name}</h3><p class="muted" style="margin:0">${P.team} · ${P.sport}</p></div></div></div>
  <div class="card"><span class="eyebrow">Отбор и спонсор</span><div class="list" style="margin-top:8px"><div class="li"><span class="ico">${svg('shield')}</span><div><b>${P.team}</b><div class="muted">треньорът вижда само готовност и аларми – не лични данни</div></div></div><div class="li"><span class="ico" style="color:#d4a72c;background:rgba(212,167,44,.16)">${svg('cup')}</span><div><b>${P.sponsor}</b><div class="muted">логото е на чашата и в приложението на отбора</div></div></div></div></div>
  <div class="card"><span class="eyebrow">Съгласия (GDPR)</span><div class="list" style="margin-top:8px">${[['Часовник: крачки, сън, пулс',true],['Местоположение – за терена и машината',true],['Камера – проверка на умора',faceOn],['Споделяне с треньора (агрегирано)',true],['Научни изследвания (анонимно)',false]].map(c=>`<div class="between li"><span>${c[0]}</span><button class="toggle" aria-pressed="${c[1]}" aria-label="${c[0]}"></button></div>`).join('')}</div><p class="muted" style="margin:8px 0 0">Данните се съхраняват в ЕС. За деца до 14 г. – съгласие от родител.</p></div>
  <button class="btn ghost" data-tab="home">← Назад</button>`}
-const EXPL={home:'<b>Днес</b> – всеки има свой мод: Волен (футбол, Recovery), Макс (бягане, подготовка за 10 км), Мария (ежедневен, тай чи), Треньорът (таблет). За Волен: сигналът (демо, примерни данни) идва от картата на терена (SRS от Creamino) и времето; автоматичните известия са планирана функция. Казва какви обувки, колко загрявка и какво да пиеш – преди да влезеш на терена.',map:'<b>Карта на България</b> – всички терени в платформата. С Ω са тези с Wi-Fi сензориране и полеви измервания; останалите са със сателитен индекс NDMI. Златните квадратчета са CRIO машините. Докосни терен.',mix:'<b>Микс и възстановяване</b> – препоръката следва механизма CRIO-H/C/R от дисертацията: топлинен стрес → течности и електролити; механичен → протеин и охлаждане. Чашата е брандирана с името, отбора и спонсора.',body:'<b>Тяло</b> – стъпки, сън, пулс и HRV от часовника; по избор бърза проверка с камерата (wellness сигнали, не диагноза); напомняния за лекарства и добавки с аларма.',run:'<b>Бягане</b> – колко бягаш по асфалт, тартан, трева или пътека и как това натоварва краката. Предлага по-мека повърхност и нов маршрут.',profile:'<b>Профил</b> – отбор, спонсор и съгласия. Треньорът вижда само готовност и аларми; личните данни остават у спортиста.',site:'<b>Терен</b> – днешните стойности: твърдост, влажност, сателитен индекс и тенденция.'};
+const EXPL={home:'<b>Днес</b> – всеки има свой мод: Волен (футбол, Recovery), Макс (бягане, подготовка за 10 км), Мария (ежедневен, тай чи), Треньорът (таблет). За Волен: сигналът (демо, примерни данни) идва от картата на терена (SRS от VAYSHA) и времето; автоматичните известия са планирана функция. Казва какви обувки, колко загрявка и какво да пиеш – преди да влезеш на терена.',map:'<b>Карта на България</b> – всички терени в платформата. С Ω са тези с Wi-Fi сензориране и полеви измервания; останалите са със сателитен индекс NDMI. Златните квадратчета са CRIO машините. Докосни терен.',mix:'<b>Микс и възстановяване</b> – препоръката следва механизма CRIO-H/C/R от дисертацията: топлинен стрес → течности и електролити; механичен → протеин и охлаждане. Чашата е брандирана с името, отбора и спонсора.',body:'<b>Тяло</b> – стъпки, сън, пулс и HRV от часовника; по избор бърза проверка с камерата (wellness сигнали, не диагноза); напомняния за лекарства и добавки с аларма.',run:'<b>Бягане</b> – колко бягаш по асфалт, тартан, трева или пътека и как това натоварва краката. Предлага по-мека повърхност и нов маршрут.',profile:'<b>Профил</b> – отбор, спонсор и съгласия. Треньорът вижда само готовност и аларми; личните данни остават у спортиста.',site:'<b>Терен</b> – днешните стойности: твърдост, влажност, сателитен индекс и тенденция.'};
 let siteSel=null;
 function screenFor(t,sel){return t==='home'?home():t==='map'?mapScreen():t==='mix'?mix():t==='body'?bodyScreen():t==='run'?runScreen():t==='site'?siteCard(sel):profile()}
 function render(keep){tabbar();
