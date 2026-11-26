@@ -1,4 +1,4 @@
-/* Creamino Software Demo – application shell and modules. */
+/* VAYSHA Software Demo – application shell and modules. */
 (function () {
   'use strict';
   var CR = window.CR, S = CR.stats, fmt = CR.fmt;
@@ -162,7 +162,7 @@
   function renderShell() {
     var d = ds();
     $('#nav').innerHTML = VIEWS.map(function (v, i) { return '<button data-view="' + v[0] + '" class="' + (state.view === v[0] ? 'on' : '') + '"><span class="n">' + (i ? i : '') + '</span>' + h(v[1]) + '</button>'; }).join('') +
-      '<div class="foot">Point Surface · Creamino Software Demo v1.0<br>Synthetic data generator ' + CR.synthetic.SPEC.id + '</div>';
+      '<div class="foot">Point Surface · VAYSHA Software Demo v1.0<br>Synthetic data generator ' + CR.synthetic.SPEC.id + '</div>';
     $('#dsSelect').innerHTML = state.datasets.map(function (x) { return '<option value="' + h(x.id) + '"' + (x.id === d.id ? ' selected' : '') + '>' + h(x.name || x.id) + '</option>'; }).join('');
     $('#sessSelect').innerHTML = '<option value="ALL">All sessions</option>' + sessionsOf(d).map(function (s) { return '<option value="' + h(s.id) + '"' + (s.id === state.session ? ' selected' : '') + '>' + h(s.id + ' · ' + s.label) + '</option>'; }).join('');
     $('#sessSelect').value = state.session;
@@ -192,10 +192,10 @@
   /* ---------- Home ---------- */
   function vHome(el) {
     el.innerHTML =
-      '<section class="hero"><div><div class="tagline">Smart Sports Surface Intelligence Platform</div><h1>CREAMINO</h1><p style="font-size:18px;color:#fff;margin:4px 0 10px">Every Athlete. Every Surface.</p>' +
-      '<p>Interactive software demo of the Creamino platform by Point Surface: data management, analytics, model validation, spatial interpolation, surface risk scoring and reporting – all computed live in your browser.</p>' +
+      '<section class="hero"><div><div class="tagline">Smart Sports Surface Intelligence Platform</div><h1>VAYSHA</h1><p style="font-size:18px;color:#fff;margin:4px 0 10px">Every Athlete. Every Surface.</p>' +
+      '<p>Interactive software demo of the VAYSHA platform by Point Surface: data management, analytics, model validation, spatial interpolation, surface risk scoring and reporting – all computed live in your browser.</p>' +
       '<div class="actions"><button class="btn cyan" id="startBtn">START DEMO</button><button class="btn ghost" style="color:#fff;border-color:#4A6079" id="sampleBtn">LOAD SAMPLE SESSION</button><button class="btn ghost" style="color:#fff;border-color:#4A6079" id="walk2">Guided walkthrough</button></div></div>' +
-      '<div class="note bad" style="margin:0">This is a <b>software demo</b>. It runs on <b>' + h(CR.synthetic.SPEC.id) + '</b>, a programmatically generated dataset. Results show how the software works – they are not measurements and are not evidence of Creamino’s accuracy.</div></section>' +
+      '<div class="note bad" style="margin:0">This is a <b>software demo</b>. It runs on <b>' + h(CR.synthetic.SPEC.id) + '</b>, a programmatically generated dataset. Results show how the software works – they are not measurements and are not evidence of VAYSHA’s accuracy.</div></section>' +
       '<div class="tiles">' + [
         ['dashboard', 'Field Monitoring', 'KPIs and a live field map per session.'],
         ['explorer', 'Data Analytics & Reporting', 'Explore, filter, import and export observations.'],
