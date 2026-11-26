@@ -38,7 +38,7 @@ async def main():
         await pg.screenshot(path='/tmp/me_iphone.png')
         check('no JS errors (iPhone)', not errs, errs[:2])
         # manifest and icons
-        m = await pg.evaluate("fetch('manifest.json?v=ps3').then(r=>r.json())")
+        m = await pg.evaluate("fetch('manifest.json?v=ps4').then(r=>r.json())")
         check('manifest keeps id /me/, start_url and scope (installed apps stay compatible)', m['id'] == '/me/' and m['start_url'] == '/me/?app=1' and m['scope'] == '/')
         check('manifest name VAYSHA Me', m['name'] == 'VAYSHA Me')
         sizes = {}

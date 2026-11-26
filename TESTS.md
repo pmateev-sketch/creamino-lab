@@ -85,6 +85,6 @@ Mobile checks use a 390 × 844 viewport; "fits" means the page does not scroll s
 ## VAYSHA Me – icon and home screen (2026-11-26)
 
 * `python3 test/me_e2e.py` – 25 / 25 passed in headless Chrome: three main actions („Карта на терените“, „Моите активности“, „Данни и анализи“) at ≥ 56 px on iPhone 390×844 (app mode), tab bar ≥ 44 px, synthetic-data warnings visible, no auto pop-up in the installed app, no horizontal overflow, tablet (1024×1366) and desktop views, manifest id/start_url/scope unchanged, every manifest icon loads at its declared size (any + maskable), apple-touch-icon 180×180 opaque, favicon 32×32, /, /map/, /#field still served.
-* Icon: geometric Ω (round inner opening, uniform 40/512 stroke, two horizontal feet), 62 % of the width, #3FD3D8 on #0C2730, faint glow; maskable variants at 80 % for the Android safe zone. Checked visually at 180, 192, 512 and 32 px.
+* Icon: geometric Ω matched to the Viber reference (stroke 0.27 R, gap 0.23 R, feet flush with the ring, foot height 0.8 of the stroke), 62 % of the width, #3FD3D8 on #0C2730, faint glow; maskable variants at 80 % for the Android safe zone. Checked visually at 180, 192, 512 and 32 px.
 * All earlier suites re-run unchanged and passing: engine 13 + data identical, field 16, hardening 18, intake 7, Lab e2e 45, field e2e 29, round trip 36, intake e2e 22.
 * Not tested: a real iPhone / iPad / Android home screen (Chrome emulation only), Safari rendering, how long installed apps take to pick up the new icon.
