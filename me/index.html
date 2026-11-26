@@ -9,8 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="VAYSHA">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=ps2">
+<link rel="icon" type="image/png" href="icon-192.png?v=ps2">
 <title>VAYSHA Me – приложение за спортиста</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=cyrillic" rel="stylesheet">
@@ -64,7 +64,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .screen>*{flex-shrink:0}
 .tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:#0a222a;padding:7px 4px 16px}
 .tabbar button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);padding:4px 0}
-.tabbar button[aria-current="true"]{color:var(--accent);font-weight:700}
+.tabbar button[aria-current="true"]{color:var(--accent);font-weight:700}.tabbar button{min-height:44px}.tabbar button:focus-visible,.quick-links a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}.quick-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.quick-links a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:1px solid var(--line);background:var(--card);border-radius:12px;color:var(--text);font-weight:700;text-decoration:none}.quick-links a:first-child{background:var(--accent);color:#0c2730}.quick-links a:hover{border-color:var(--accent)}
 .tabbar svg{width:22px;height:22px}
 .hdr{display:flex;justify-content:space-between;align-items:center}
 .hdr h2{font-size:21px}
@@ -131,8 +131,8 @@ body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:non
 <div class="demo">ДЕМО ПРОТОТИП · SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED · NOT LIVE STADIUM DATA<br>Примерни данни · автоматичните аларми и известия са планирана функция · не е медицинско изделие · <a href="../" style="color:inherit;font-weight:700">← VAYSHA Lab</a></div>
 <div class="stage">
   <div class="intro">
-    <div class="brand"><span class="omega">Ω</span><div><b>VAYSHA Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
-    <h1>Терена под краката ти – в телефона и таблета.</h1>
+    <div class="brand"><img src="point-surface-icon.svg" alt="Point Surface" width="40" height="40" style="border-radius:10px"><div><b>VAYSHA Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
+    <h1>Спортните терени — на един екран.</h1><p style="margin:0;color:var(--muted)">Избери профил или разгледай картата. Демонстрационните оценки не са реални измервания.</p><div class="quick-links"><a href="../map/" aria-label="Отвори картата на спортните терени">Разгледай картата</a><a href="../" aria-label="Отвори аналитичната лаборатория">Данни и анализи</a><a href="#install">Инсталиране</a></div>
     <div class="who" id="who" aria-label="Избери профил"></div>
   </div>
   <div class="devices">
@@ -152,7 +152,7 @@ body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:non
 </div>
 <section class="below">
   <div class="explain" id="explain"></div>
-  <div class="explain" id="install"><b>Инсталирай на телефона</b><br><span id="instTxt">Android (Chrome): бутонът долу или меню ⋮ → „Добавяне към началния екран“. iPhone (Safari): бутон Сподели ⎋ → „Добави към начален екран“.</span><div style="margin-top:8px"><button class="btn sm" id="instBtn" hidden>Добави на началния екран</button></div></div>
+  <div class="explain" id="install"><b>Инсталирай на телефона</b><br><span id="instTxt">Android (Chrome): меню ⋮ → „Инсталиране на приложението“. iPhone (Safari): Споделяне → „Добави към началния екран“. Иконата е знакът Ω на Point Surface. Ако вече си добавил приложението със стара икона, изтрий прекия път и го добави отново.</span><div style="margin-top:8px"><button class="btn sm" id="instBtn" hidden>Добави на началния екран</button></div></div>
   <p class="disc">Препоръките са decision-support за спорт и възстановяване, не медицински съвет. Данните от часовника и камерата се ползват само с изрично съгласие и остават на телефона, ако не ги споделиш. При здравословни оплаквания – лекар.</p>
 </section>
 <script>
@@ -334,7 +334,7 @@ function profile(){const P=PERSONAS[who];return header('Профил','Отбо�
  <button class="btn ghost" data-tab="home">← Назад</button>`}
 const EXPL={home:'<b>Днес</b> – всеки има свой мод: Волен (футбол, Recovery), Макс (бягане, подготовка за 10 км), Мария (ежедневен, тай чи), Треньорът (таблет). За Волен: сигналът (демо, примерни данни) идва от картата на терена (SRS от VAYSHA) и времето; автоматичните известия са планирана функция. Казва какви обувки, колко загрявка и какво да пиеш – преди да влезеш на терена.',map:'<b>Карта на България</b> – всички терени в платформата. С Ω са тези с Wi-Fi сензориране и полеви измервания; останалите са със сателитен индекс NDMI. Златните квадратчета са CRIO машините. Докосни терен.',mix:'<b>Микс и възстановяване</b> – препоръката следва механизма CRIO-H/C/R от дисертацията: топлинен стрес → течности и електролити; механичен → протеин и охлаждане. Чашата е брандирана с името, отбора и спонсора.',body:'<b>Тяло</b> – стъпки, сън, пулс и HRV от часовника; по избор бърза проверка с камерата (wellness сигнали, не диагноза); напомняния за лекарства и добавки с аларма.',run:'<b>Бягане</b> – колко бягаш по асфалт, тартан, трева или пътека и как това натоварва краката. Предлага по-мека повърхност и нов маршрут.',profile:'<b>Профил</b> – отбор, спонсор и съгласия. Треньорът вижда само готовност и аларми; личните данни остават у спортиста.',site:'<b>Терен</b> – днешните стойности: твърдост, влажност, сателитен индекс и тенденция.'};
 let siteSel=null;
-function screenFor(t,sel){return t==='home'?home():t==='map'?mapScreen():t==='mix'?mix():t==='body'?bodyScreen():t==='run'?runScreen():t==='site'?siteCard(sel):profile()}
+function screenFor(t,sel){return t==='home'?'<div class="card" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px"><div><b style="color:var(--accent)">VAYSHA Me</b><div class="muted">Демо · примерни стойности</div></div><a href="../map/" style="color:#0c2730;background:var(--accent);border-radius:10px;padding:11px 12px;font-weight:800;text-decoration:none;white-space:nowrap">Карта на терените</a></div>'+home():t==='map'?mapScreen():t==='mix'?mix():t==='body'?bodyScreen():t==='run'?runScreen():t==='site'?siteCard(sel):profile()}
 function render(keep){tabbar();
  const sv=who;who='coach';const h2=screenFor(tab2,site2);who=sv;
  const s2=$('screen2'),y2=s2.scrollTop;s2.innerHTML=h2;s2.scrollTop=keep==='t'?y2:0;
