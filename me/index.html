@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json?v=ps3">
 <meta name="theme-color" content="#0c2730">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="VAYSHA">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=ps2">
-<link rel="icon" type="image/png" href="icon-192.png?v=ps2">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=ps3">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=ps3">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=ps3">
 <title>VAYSHA Me – приложение за спортиста</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=cyrillic" rel="stylesheet">
@@ -123,7 +124,22 @@ body.app .intro,body.app .below,body.app #tabletDev,body.app #install{display:no
 body.app .demo{font-size:10px;padding:2px 8px;line-height:1.3}body.app .demo br{display:none}
 body.app .stage{display:block;padding:0;min-height:0;background:#071c23}body.app .devices{display:block;--z:1}
 body.app .devices .phone{zoom:1;width:100%;max-width:none;height:calc(100vh - 18px);height:calc(100dvh - 18px);border:0;border-radius:0;box-shadow:none;margin:0}body.app .notch{display:none}body.app .status{display:none}body.app .demo{padding-top:calc(2px + env(safe-area-inset-top))}body.app .tabbar{padding-bottom:env(safe-area-inset-bottom)}body.app .devices .phone{height:calc(100dvh - 18px - env(safe-area-inset-top))}
-body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:none!important}body.tab .stage{display:block;padding:12px;min-height:0}body.tab .devices{display:block;--z:1}body.tab .devices .tablet{display:block!important;zoom:1;margin:0 auto;width:min(100%,1100px);height:calc(100dvh - 60px);max-height:820px}
+body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:none!important}body.tab .stage{display:block;padding:12px;min-height:0}body.tab .devices{display:block;--z:1}body.tab .devices .tablet{display:block!important;zoom:1;margin:0 auto;width:min(100%,1100px);height:calc(100dvh - 60px);max-height:none}
+/* основни действия – големи цели за докосване */
+.start{display:flex;flex-direction:column;gap:10px}
+.act{display:flex;align-items:center;gap:14px;min-height:64px;padding:12px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);color:var(--text);text-decoration:none;text-align:left;width:100%;font:inherit}
+.act b{display:block;font-size:17px;line-height:1.2;font-weight:700}
+.act small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.act .ai{width:40px;height:40px;border-radius:12px;background:rgba(63,211,216,.14);color:var(--accent);display:grid;place-items:center;flex:none}
+.act .ai svg{width:22px;height:22px}
+.act.primary{background:var(--accent);border-color:var(--accent);color:#0c2730}
+.act.primary small{color:#0c3a44}.act.primary .ai{background:rgba(12,39,48,.12);color:#0c2730}
+.act:hover{border-color:var(--accent)}.act:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.start-note{margin:0;font-size:12.5px;color:var(--muted);text-align:center}
+.phone.tablet .screen>.start{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr)}
+.phone.tablet .screen>.start .start-note{grid-column:1/-1}
+body.app .tabbar button{font-size:12px;min-height:52px}body.app .tabbar svg{width:24px;height:24px}
+body.app .btn{min-height:44px;padding:11px 18px;font-size:15px}body.app .btn.sm{min-height:44px;padding:10px 16px;font-size:14px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -131,7 +147,7 @@ body.tab .intro,body.tab .below,body.tab #phoneDev,body.tab #install{display:non
 <div class="demo">ДЕМО ПРОТОТИП · SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED · NOT LIVE STADIUM DATA<br>Примерни данни · автоматичните аларми и известия са планирана функция · не е медицинско изделие · <a href="../" style="color:inherit;font-weight:700">← VAYSHA Lab</a></div>
 <div class="stage">
   <div class="intro">
-    <div class="brand"><img src="point-surface-icon.svg" alt="Point Surface" width="40" height="40" style="border-radius:10px"><div><b>VAYSHA Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
+    <div class="brand"><img src="point-surface-icon.svg?v=ps3" alt="Point Surface" width="40" height="40" style="border-radius:10px"><div><b>VAYSHA Me</b><small>от Point Surface · за всеки, който спортува</small></div></div>
     <h1>Спортните терени — на един екран.</h1><p style="margin:0;color:var(--muted)">Избери профил или разгледай картата. Демонстрационните оценки не са реални измервания.</p><div class="quick-links"><a href="../map/" aria-label="Отвори картата на спортните терени">Разгледай картата</a><a href="../" aria-label="Отвори аналитичната лаборатория">Данни и анализи</a><a href="#install">Инсталиране</a></div>
     <div class="who" id="who" aria-label="Избери профил"></div>
   </div>
@@ -242,7 +258,7 @@ function home(){const P=PERSONAS[who];
  <div class="card"><span class="eyebrow">Твоят микс</span><p style="margin:6px 0 2px;font-family:var(--display);font-weight:800;font-size:18px">Hydro+ Pre</p><p class="muted" style="margin:0 0 8px">600 ml · Na 700 mg/L · преди тренировка</p><button class="btn sm" data-tab="mix">Вземи от машина</button></div></div>
  <div class="card"><div class="between"><span class="eyebrow">Най-близка CRIO машина</span><span class="muted">${svg('pin','#3fd3d8').replace('<svg','<svg style="width:15px;height:15px;vertical-align:-3px"')}</span></div>
  <p style="margin:6px 0 2px"><b>CRIO – Берое, съблекални</b></p><p class="muted" style="margin:0">на 120 m · свободна · твоята рецепта е заредена</p></div>
- <div class="card"><div class="between"><span class="eyebrow">Напомняне</span><button class="toggle" aria-pressed="true" aria-label="Аларма"></button></div><p style="margin:6px 0 0"><b>19:00 · Лекарство по рецепта</b></p><p class="muted" style="margin:0">въведено от теб · напомняне с аларма</p></div>`}
+`}
 function coachHome(){const s=SITES.find(x=>x.id==='nef');
  return header('Отбор U12','Тренировка днес 17:00 · '+s.n)+`
  <div class="card alert"><div class="between"><span class="eyebrow" style="color:var(--warn)">Условия на терена</span><span class="pill" style="--c:var(--warn)">повишен</span></div>
@@ -334,7 +350,13 @@ function profile(){const P=PERSONAS[who];return header('Профил','Отбо�
  <button class="btn ghost" data-tab="home">← Назад</button>`}
 const EXPL={home:'<b>Днес</b> – всеки има свой мод: Волен (футбол, Recovery), Макс (бягане, подготовка за 10 км), Мария (ежедневен, тай чи), Треньорът (таблет). За Волен: сигналът (демо, примерни данни) идва от картата на терена (SRS от VAYSHA) и времето; автоматичните известия са планирана функция. Казва какви обувки, колко загрявка и какво да пиеш – преди да влезеш на терена.',map:'<b>Карта на България</b> – всички терени в платформата. С Ω са тези с Wi-Fi сензориране и полеви измервания; останалите са със сателитен индекс NDMI. Златните квадратчета са CRIO машините. Докосни терен.',mix:'<b>Микс и възстановяване</b> – препоръката следва механизма CRIO-H/C/R от дисертацията: топлинен стрес → течности и електролити; механичен → протеин и охлаждане. Чашата е брандирана с името, отбора и спонсора.',body:'<b>Тяло</b> – стъпки, сън, пулс и HRV от часовника; по избор бърза проверка с камерата (wellness сигнали, не диагноза); напомняния за лекарства и добавки с аларма.',run:'<b>Бягане</b> – колко бягаш по асфалт, тартан, трева или пътека и как това натоварва краката. Предлага по-мека повърхност и нов маршрут.',profile:'<b>Профил</b> – отбор, спонсор и съгласия. Треньорът вижда само готовност и аларми; личните данни остават у спортиста.',site:'<b>Терен</b> – днешните стойности: твърдост, влажност, сателитен индекс и тенденция.'};
 let siteSel=null;
-function screenFor(t,sel){return t==='home'?'<div class="card" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px"><div><b style="color:var(--accent)">VAYSHA Me</b><div class="muted">Демо · примерни стойности</div></div><a href="../map/" style="color:#0c2730;background:var(--accent);border-radius:10px;padding:11px 12px;font-weight:800;text-decoration:none;white-space:nowrap">Карта на терените</a></div>'+home():t==='map'?mapScreen():t==='mix'?mix():t==='body'?bodyScreen():t==='run'?runScreen():t==='site'?siteCard(sel):profile()}
+/* начален екран: три основни действия; без измислени стойности */
+function startBlock(){return `<nav class="start" aria-label="Основни действия">
+<a class="act primary" href="../map/"><span class="ai">${svg('map')}</span><span><b>Карта на терените</b><small>сателитна оценка на терените в България</small></span></a>
+<button class="act" data-tab="run" type="button"><span class="ai">${svg('run')}</span><span><b>Моите активности</b><small>бягане и натоварване · демо</small></span></button>
+<a class="act" href="../"><span class="ai">${svg('heart')}</span><span><b>Данни и анализи</b><small>VAYSHA Lab · синтетични данни</small></span></a>
+<p class="start-note">Демо · стойностите в приложението са примерни, не реални измервания.</p></nav>`}
+function screenFor(t,sel){return t==='home'?startBlock()+home():t==='map'?mapScreen():t==='mix'?mix():t==='body'?bodyScreen():t==='run'?runScreen():t==='site'?siteCard(sel):profile()}
 function render(keep){tabbar();
  const sv=who;who='coach';const h2=screenFor(tab2,site2);who=sv;
  const s2=$('screen2'),y2=s2.scrollTop;s2.innerHTML=h2;s2.scrollTop=keep==='t'?y2:0;
@@ -362,7 +384,7 @@ if(/[?&]device=tablet/.test(location.search)){document.body.classList.add("tab")
 if(matchMedia("(display-mode: standalone)").matches||navigator.standalone||/[?&]app=1/.test(location.search)){$("install").hidden=true;document.body.classList.add("app");const d=document.querySelector(".demo");if(d)d.innerHTML='Демо · примерни данни · не е медицинско изделие · <a href="../map/" style="color:inherit;font-weight:700">Карта</a>'}
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 render();
-setTimeout(()=>toast(`<span class="ico" style="color:var(--warn);background:rgba(242,184,75,.16)">${svg('bell')}</span><div><b>Стадион „Берое“: твърда зона A2</b><div class="muted">AG обувки · +5 мин загрявка · Hydro+ Pre</div></div>`),900);
+if(!document.body.classList.contains('app')&&innerWidth>640)setTimeout(()=>toast(`<span class="ico" style="color:var(--warn);background:rgba(242,184,75,.16)">${svg('bell')}</span><div><b>Стадион „Берое“: твърда зона A2</b><div class="muted">AG обувки · +5 мин загрявка · Hydro+ Pre</div></div>`),900);
 if(location.hash.length>1){const h=location.hash.slice(1);if(PERSONAS[h]){who=h;render()}else if(['home','map','mix','body','run','profile'].includes(h)){tab=h;render()}}
 })();
 
