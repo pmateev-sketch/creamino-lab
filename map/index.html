@@ -47,7 +47,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,li:focus-visible{o
 <input type="search" id="q" placeholder="Търси град или име…" aria-label="Търсене">
 <select id="sort" aria-label="Подреждане"></select>
 <ul id="list"></ul></aside></main>
-<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: дял със сняг по последната безоблачна снимка. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Активни места: паркове и площадки от OpenStreetMap, достъпът не е проверен. Открити води: водно огледало и хлорофилен индекс (NDCI), не е анализ на водата. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0). <a href="privacy.html">Лични данни</a></footer>
+<footer id="foot">Оценката A–D е сравнителен сателитен индекс на растителността (NDVI, Copernicus Sentinel-2) спрямо останалите тревни терени в България за същия период. Не е оценка по FIFA, не мери твърдост и не замества измерване на място; през зимата тревата е в покой. Ски писти: приблизителен дял със сняг по последната достъпна безоблачна снимка, не са проверени работата и безопасността на пистите. Контури: © сътрудници на OpenStreetMap (ODbL) през Overture Maps. Активни места: паркове и площадки от OpenStreetMap, достъпът не е проверен. Открити води: водно огледало и хлорофилен индекс (NDCI), не е анализ на водата. Сателитна основа: Esri World Imagery. Лиги: Wikipedia (сезон 2026/27). Времето: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0). <a href="privacy.html">Лични данни</a></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 {
@@ -65,8 +65,8 @@ function buildResorts(){const P=D.piste,n=P.length,par=P.map((_,i)=>i),f=i=>par[
  const u='https://api.open-meteo.com/v1/forecast?latitude='+RS.map(r=>r.lat.toFixed(3)).join(',')+'&longitude='+RS.map(r=>r.lon.toFixed(3)).join(',')+'&current=temperature_2m,snow_depth,wind_speed_10m&daily=snowfall_sum&past_days=3&forecast_days=4&timezone=Europe%2FSofia';
  fetch(u).then(r=>r.json()).then(j=>{WX=Array.isArray(j)?j:[j];if(view==='piste')extra()}).catch(()=>{WX=[];if(view==='piste')extra()})}
 function cond(r,w){const d=w&&w.current&&w.current.snow_depth!=null?w.current.snow_depth*100:null,s=r.snow;
- if((d!=null&&d>=40)||(s!=null&&s>=60&&(d==null||d>=20)))return['Добри','#138a45'];
- if((d!=null&&d>=15)||(s!=null&&s>=30))return['Частични','#e3b52b'];return['Няма сняг за ски','#b9a07a']}
+ if((d!=null&&d>=40)||(s!=null&&s>=60&&(d==null||d>=20)))return['Сняг: повече','#138a45'];
+ if((d!=null&&d>=15)||(s!=null&&s>=30))return['Сняг: частично','#e3b52b'];return['Сняг: малко','#b9a07a']}
 function extra(){const E=$('extra');
  if(view==='turf'){const c={1:0,2:0};for(const t of(LGT?LGT.teams:[]))c[t[0]]++;
   E.innerHTML=LGT?`<select id="lg" aria-label="Лига"><option value="">Всички терени</option><option value="1">Първа лига ${LGT.season} · ${new Set(LGT.teams.filter(t=>t[0]==1).map(t=>t[1])).size} отбора</option><option value="2">Втора лига ${LGT.season} · ${new Set(LGT.teams.filter(t=>t[0]==2).map(t=>t[1])).size} отбора</option></select>${lg?'<p class="note">Домакинските стадиони по Wikipedia, проверено 20.11.2026. Лудогорец II не е отбелязан – базата му не е потвърдена.</p>':''}`:'';
