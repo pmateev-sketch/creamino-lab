@@ -88,3 +88,21 @@ Mobile checks use a 390 × 844 viewport; "fits" means the page does not scroll s
 * Icon: geometric Ω matched to the Viber reference (stroke 0.27 R, gap 0.23 R, feet flush with the ring, foot height 0.8 of the stroke), 62 % of the width, #3FD3D8 on #0C2730, faint glow; maskable variants at 80 % for the Android safe zone. Checked visually at 180, 192, 512 and 32 px.
 * All earlier suites re-run unchanged and passing: engine 13 + data identical, field 16, hardening 18, intake 7, Lab e2e 45, field e2e 29, round trip 36, intake e2e 22.
 * Not tested: a real iPhone / iPad / Android home screen (Chrome emulation only), Safari rendering, how long installed apps take to pick up the new icon.
+
+
+## VAYSHA QA after PR #5 / #6 (2026-11-27)
+
+New suite `python3 test/vaysha_qa_e2e.py` – 69 / 69 passed in headless Chrome:
+
+* Page health: `/`, `/map/`, `/map/privacy.html`, `/me/`, `/me/?app=1`, `/#field` load without JS errors.
+* Satellite map: Leaflet loaded, satellite tiles and canvas markers drawn, terrain list filled, no sideways scroll on a phone.
+* PR #5: approximate ski snow share and "piste safety not verified" footer; snow-only ski labels; no CRIO machines plotted; demo sites labelled "примерни стойности"; Ω = demo scenario; site card "ДЕМО · синтетични данни"; cup shows VAYSHA; Lab note names VAYSHA.
+* Credibility: CRIO only as a concept (no "nearby / 120 m / recipe loaded"), WADA/allergy check not claimed, real-stadium home signal marked as example values, tour text matches labels, alerts described as planned.
+* Brand: PDF header and file name VAYSHA (download checked), privacy page VAYSHA; storage and format identifiers (`creamino-field`, `creamino-field-1.0`, `creamino-field-zip-1`, `creamino-demo-v1`) unchanged.
+* Icons (real pixels): Ω on #0C2730 in #3FD3D8, two feet, open bottom, round hole (ratio 0.9–1.1), width 60–65 % (maskable 45–62 %), faint glow that ends within 26 px on the 512 px icon.
+* PR #6 service worker: installs and controls `/me/`; cache `vaysha-me-v5`; an old `creamino-me-v4` cache is removed on update; an unrelated cache on the same origin is kept; shell and icons precached; offline navigation falls back to the shell; an offline missing asset is a network error, not index.html; cached asset served offline; back online serves the network again.
+* iPhone SE 375 × 667 and iPhone 14 390 × 844 (installed-app mode): three entries visible without scrolling, demo profile switch (athletes + coach) with 44 × 44 px targets, tab bar ≥ 44 px, one bottom navigation, end of screen not covered by the tab bar, no overflow, no errors. Tablet 820 × 1180 also checked.
+
+All earlier suites re-run without changing expected results: engine 13 / 13 + data identical, field 16 / 16, hardening 18 / 18, intake 7 / 7, `e2e.py` 45 / 45, `field_e2e.py` 29 / 29, `field_intake_e2e.py` 22 / 22, `field_roundtrip_e2e.py` 36 / 36, `me_e2e.py` 25 / 25.
+
+Not tested: a real iPhone or Android device (Safari / iOS PWA install and home-screen icon rendering), Firefox, real CRIO hardware, real CSI logger files.

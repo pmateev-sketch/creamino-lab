@@ -425,7 +425,7 @@
   };
   F.fromJSON = function (text) {
     var o = JSON.parse(text);
-    if (!o || !o.session_id || !Array.isArray(o.records)) throw new Error('Not a Creamino field session file');
+    if (!o || !o.session_id || !Array.isArray(o.records)) throw new Error('Not a VAYSHA (Creamino) field session file');
     if (F.ORIGINS.indexOf(o.data_origin) < 0) throw new Error('Session origin "' + o.data_origin + '" is not accepted (only real or test)');
     ['export', 'qc', 'pairs', 'valid_pairs', 'match_log', 'metrics', 'model'].forEach(function (k) { delete o[k]; });
     F.migrate(o);
@@ -437,7 +437,7 @@
     var inc = ev.current.filter(function (e) { return e.qc.status !== 'PASS'; });
     var pct = function (v) { return v === null ? '–' : Math.round(v * 100) + ' %'; };
     var h = '<!DOCTYPE html><html lang="bg"><head><meta charset="utf-8"><title>Session report ' + esc(s.session_id) + '</title><style>body{font:14px/1.5 Arial,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#1E2A38}h1{font-size:22px}h2{font-size:16px;margin-top:22px;border-bottom:1px solid #ddd}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:4px 6px;text-align:left;font-size:13px;vertical-align:top}.b{background:#FFF7E6;border:1px solid #F2D7A6;padding:8px 10px;border-radius:6px}</style></head><body>';
-    h += '<h1>Creamino™ Field Session Report – ' + esc(s.session_id) + '</h1>';
+    h += '<h1>VAYSHA™ Field Session Report – ' + esc(s.session_id) + '</h1>';
     h += '<p class="b"><b>INITIAL CALIBRATION — ' + esc(s.site_id) + '</b><br>' + esc(F.CALIBRATION_MESSAGE) + '<br>Data origin: <b>' + esc(s.data_origin.toUpperCase()) + '</b>' + (s.data_origin === 'test' ? ' (test data – not for calibration)' : '') + '</p>';
     h += '<h2>Site and date</h2><table><tr><th>Site</th><td>' + esc(s.site_name) + ' (' + esc(s.site_id) + '), field ' + esc(s.field_id) + '</td></tr><tr><th>Session date</th><td>' + esc(s.session_date) + '</td></tr><tr><th>Status</th><td>' + esc(s.status) + '</td></tr><tr><th>Operator</th><td>' + esc(s.operator_id || '–') + '</td></tr><tr><th>Created</th><td>' + esc(s.created_utc) + '</td></tr></table>';
     h += '<h2>Configuration</h2><table>' + ['device_id', 'device_model', 'firmware_version', 'wifi_channel', 'bandwidth', 'subcarrier_count', 'window_duration'].map(function (k) { return '<tr><th>' + k + '</th><td>' + esc(d[k] || '–') + '</td></tr>'; }).join('') +

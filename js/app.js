@@ -326,7 +326,7 @@
       var header = '# ' + d.id + ' v' + (d.version || '1') + ' · status: ' + d.status + ' · exported ' + nowISO() + (d.status === STATUS[0] ? ' · SYNTHETIC DEMONSTRATION DATA — NOT EXPERIMENTALLY VALIDATED' : '') + '\n';
       download((d.id + (state.session !== 'ALL' ? '_' + state.session : '') + '.csv'), header + csv, 'text/csv');
     };
-    $('#eTemplate').onclick = function () { download('creamino_import_template.csv', 'obs_id,session,point,x,y,vwc_ref,gmax_ref,f1,f4,f7\nS1-P1,S1,P1,10,10,22.5,85.0,,,\n', 'text/csv'); };
+    $('#eTemplate').onclick = function () { download('vaysha_import_template.csv', 'obs_id,session,point,x,y,vwc_ref,gmax_ref,f1,f4,f7\nS1-P1,S1,P1,10,10,22.5,85.0,,,\n', 'text/csv'); };
     $('#eImport').onchange = function () { var f = this.files[0]; if (!f) return; var rd = new FileReader(); rd.onload = function () { importFlow(f.name, String(rd.result)); }; rd.readAsText(f); this.value = ''; };
   }
   function download(name, content, type) {
@@ -596,7 +596,7 @@
     $$('[data-chg]', el).forEach(function (b) { b.onclick = function () { statusModal(b.dataset.chg); }; });
     $$('[data-use]', el).forEach(function (b) { b.onclick = function () { state.activeId = b.dataset.use; state.session = 'ALL'; render(); }; });
     $$('[data-rules]', el).forEach(function (b) { b.onclick = function () { var x = state.datasets.filter(function (q) { return q.id === b.dataset.rules; })[0]; openModal('<h3>Generation rules · ' + h(x.id) + '</h3><ol style="font-size:13px">' + x.rules.map(function (r) { return '<li>' + h(r) + '</li>'; }).join('') + '</ol><div class="flex" style="justify-content:flex-end"><button class="btn" data-close>Close</button></div>'); }; });
-    $('#logCsv').onclick = function () { download('creamino_provenance_log.csv', CR.csv.toCSV(state.log, ['time', 'dataset', 'action', 'from', 'to', 'by', 'reason'].map(function (k) { return { key: k }; })), 'text/csv'); };
+    $('#logCsv').onclick = function () { download('vaysha_provenance_log.csv', CR.csv.toCSV(state.log, ['time', 'dataset', 'action', 'from', 'to', 'by', 'reason'].map(function (k) { return { key: k }; })), 'text/csv'); };
     $('#dsJson').onclick = function () { var x = Object.assign({}, ds()); delete x._cache; download(x.id + '.json', JSON.stringify(x, null, 2), 'application/json'); };
   }
   function provCard(x) {
