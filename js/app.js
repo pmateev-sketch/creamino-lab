@@ -386,7 +386,7 @@
       '<div class="controls"><label>Variable<select id="aT">' + opt('vwc_ref', 'VWC – volumetric water content', u.target) + opt('gmax_ref', 'Gmax – impact hardness', u.target) + '</select></label>' +
       '<label>Predictions from<select id="aM">' + Object.keys(METHODS).map(function (k) { return opt(k, METHODS[k], u.method); }).join('') + '</select></label>' +
       '<label>Session<select id="aS"><option value="ALL">All sessions</option>' + sessionsOf(d).map(function (s) { return opt(s.id, s.id, state.session); }).join('') + '</select></label></div>' +
-      (syn ? '<div class="note bad">Results from SYNTHETIC DEMONSTRATION DATA. They demonstrate the software, not the accuracy of Creamino.</div>' : '') +
+      (syn ? '<div class="note bad">Results from SYNTHETIC DEMONSTRATION DATA. They demonstrate the software, not the accuracy of VAYSHA.</div>' : '') +
       (u.method === 'insample' ? '<div class="note">In-sample fit: the model is tested on the same data it was trained on. This is optimistic and shown only for comparison.</div>' : '') +
       (u.method === 'kfold' ? '<div class="note info">Random K-fold mixes observations of the same session in training and test. Use LOSO or grouped CV for an estimate on unseen sessions.</div>' : '') +
       (res.warnings && res.warnings.length ? '<div class="note">' + res.warnings.map(h).join('<br>') + '</div>' : '') +
