@@ -22,7 +22,7 @@
       page++;
       doc.setFillColor.apply(doc, NAVY); doc.rect(0, 0, W, 16, 'F');
       doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('POINT SURFACE', M, 10);
-      doc.setTextColor.apply(doc, CYAN); doc.text('CREAMINO', M + 33, 10);
+      doc.setTextColor.apply(doc, CYAN); doc.text('VAYSHA', M + 33, 10);
       doc.setTextColor(200, 214, 224); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.text('Technical surface report · Software demo v1.0', W - M, 10, { align: 'right' });
       if (syn) {
         doc.setFillColor(253, 236, 236); doc.rect(0, 16, W, 7, 'F');
@@ -96,7 +96,7 @@
       ['Observations with SRS > 0.35', String(dev), '', ''],
       ['Mean SRS', f(S.mean(c.rows.map(function (r) { return r.srs; })), 3), f(S.min(c.rows.map(function (r) { return r.srs; })), 3), f(S.max(c.rows.map(function (r) { return r.srs; })), 3)]
     ]);
-    if (syn) para('All values in this report come from the synthetic dataset ' + c.ds.id + ', generated programmatically with a fixed random seed for software demonstration. They are not measurements and do not show the accuracy of Creamino on any real surface.', 9, RED);
+    if (syn) para('All values in this report come from the synthetic dataset ' + c.ds.id + ', generated programmatically with a fixed random seed for software demonstration. They are not measurements and do not show the accuracy of VAYSHA on any real surface.', 9, RED);
 
     /* ---- measurements ---- */
     h1('2  Measurements');
@@ -155,7 +155,7 @@
     /* ---- limitations + provenance ---- */
     h1('7  Limitations and data provenance');
     [
-      syn ? 'The dataset is synthetic. No result in this report is a measurement or evidence of the accuracy of Creamino.' : 'The dataset status is "' + c.ds.status + '". Validation of the values is the responsibility of the data provider.',
+      syn ? 'The dataset is synthetic. No result in this report is a measurement or evidence of the accuracy of VAYSHA.' : 'The dataset status is "' + c.ds.status + '". Validation of the values is the responsibility of the data provider.',
       'Wi-Fi CSI features are inputs to a statistical model, not direct measurements of moisture or hardness.',
       'Interpolated values are estimates between input points; uncovered areas are not estimated.',
       'With few observations per session, per-session metrics are unstable.',
@@ -166,7 +166,7 @@
         c.log.map(function (l) { return [l.time, l.action, (l.from ? l.from + ' -> ' : '') + l.to, String(l.reason).slice(0, 60)]; }), { fs: 7.5 });
     }
 
-    var name = 'Creamino_report_' + c.ds.id + '_' + (c.session === 'ALL' ? 'all' : c.session) + '_' + gen.toISOString().slice(0, 10) + '.pdf';
+    var name = 'VAYSHA_report_' + c.ds.id + '_' + (c.session === 'ALL' ? 'all' : c.session) + '_' + gen.toISOString().slice(0, 10) + '.pdf';
     return { name: name, blob: doc.output('blob'), pages: page };
   }
 
